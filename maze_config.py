@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Tuple, Optional
 
+
 @dataclass
 class MazeConfig:
     width: int

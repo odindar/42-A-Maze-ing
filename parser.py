@@ -4,6 +4,7 @@
 from typing import Tuple
 
 from maze_config import MazeConfig
+from maze_generator import MazeGenerator
 
 
 def parse_int(line: str) -> int:
@@ -68,6 +69,7 @@ def parser_config() -> MazeConfig:
         perfect=is_perfect,
     )
 
+
 def is_valid_maze(maze: MazeConfig) -> bool:
     if maze.width < 7 or maze.height < 5:
         print("Warning: Maze is too small for display 42 pattern.")
@@ -80,7 +82,9 @@ def is_valid_maze(maze: MazeConfig) -> bool:
         maze.entry != maze.exit
     )
 
+
 if __name__ == "__main__":
     config = parser_config()
-    print(config)
-    print(is_valid_maze(config))
+    if is_valid_maze(config):
+        generator = MazeGenerator(config)
+        generator.debug_print()
