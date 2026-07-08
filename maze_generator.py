@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import random
-
+from collections import deque
 from maze_config import MazeConfig
 
 DIRECTIONS = {
@@ -26,11 +26,11 @@ class MazeGenerator:
 
     def _place_42_pattern(self) -> None:
         pattern = [
-            "10000 0 11111",
-            "10000 0 00001",
-            "11111 0 11111",
-            "00001 0 10000",
-            "00001 0 11111",
+            "1000111",
+            "1000001",
+            "1110111",
+            "0010100",
+            "0010111",
         ]
         pattern_h = len(pattern)
         pattern_w = len(pattern[0])
@@ -73,7 +73,29 @@ class MazeGenerator:
 
 
     def _solve_maze(self) -> str:
-        return "SOLVE"
+        entry: tuple[int, int] = self.config.entry
+        exit: tuple[int, int] = self.config.exit
+
+        if entry == exit:
+            return ""
+        queue = deque([(entry[0], entry[1], "")])
+        visited: set = set()
+        visited.add(entry)
+
+        while queue:
+            cx, cy, path = queue.popleft()
+            if (cx, cy) == exit:
+                return path
+
+            cur_value = self.grid[cy][cx]
+            for direction_char, (dy, dx, wall_bit, _) in DIRECTIONS.items():
+                if (cur_value & wall_bit) == 0:
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < self.config.width and 0 <= ny < self.config.height:
+                        if (nx, ny) not in visited:
+                            visited.add((nx, ny))
+                            queue.append((nx, ny, path + direction_char))
+        return ""
 
 
     def save_to_file(self) -> None:

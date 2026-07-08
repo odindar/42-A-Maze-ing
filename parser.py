@@ -37,6 +37,7 @@ def parser_config() -> MazeConfig:
     exit: Tuple[int, int] = (0, 0)
     output_file: str = ""
     is_perfect: bool = False
+    seed: int | None = None
     try:
         with open("config.txt", "r") as config_file:
             output = config_file.readlines()
@@ -56,6 +57,8 @@ def parser_config() -> MazeConfig:
                     output_file = out.split("=")[1]
                 elif out.startswith("PERFECT"):
                     is_perfect = out.split("=")[1] == "True"
+                elif out.startswith("SEED"):
+                    seed = parse_int(out)
 
     except Exception as e:
         print(f"Error: {e}")
@@ -66,6 +69,7 @@ def parser_config() -> MazeConfig:
         exit=exit,
         output_file=output_file,
         perfect=is_perfect,
+        seed=seed,
     )
 
 

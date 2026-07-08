@@ -11,7 +11,7 @@ def main() -> None:
         generator.save_to_file()
         generator.debug_print()
     else:
-        print("Error: Geçersiz labirent konfigürasyonu.")
+        print("Error")
         return
 
 if __name__ == "__main__":
