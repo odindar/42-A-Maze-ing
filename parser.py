@@ -4,7 +4,6 @@
 from typing import Tuple
 
 from maze_config import MazeConfig
-from maze_generator import MazeGenerator
 
 
 def parse_int(line: str) -> int:
@@ -81,10 +80,3 @@ def is_valid_maze(maze: MazeConfig) -> bool:
         0 <= maze.exit[1] < maze.height and
         maze.entry != maze.exit
     )
-
-
-if __name__ == "__main__":
-    config = parser_config()
-    if is_valid_maze(config):
-        generator = MazeGenerator(config)
-        generator.debug_print()
