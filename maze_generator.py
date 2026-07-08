@@ -70,6 +70,8 @@ class MazeGenerator:
                 stack.append((next_x, next_y))
             else:
                 stack.pop()
+        if not self.config.perfect:
+            self._make_imperfect()
 
 
     def _solve_maze(self) -> str:
@@ -98,6 +100,27 @@ class MazeGenerator:
         return ""
 
 
+    def _make_imperfect(self) -> None:
+        pattern_w, pattern_h = 9, 5
+        start_x = (self.config.width - pattern_w) // 2
+        start_y = (self.config.height - pattern_h) // 2
+        walls_to_break = (self.config.width * self.config.height) // 20
+        if walls_to_break == 0:
+            walls_to_break = 1
+        for _ in range(walls_to_break):
+            x = random.randint(1, self.config.width - 2)
+            y = random.randint(1, self.config.height - 2)
+            if start_x <= x < start_x + pattern_w and start_y <= y < start_y + pattern_h:
+                continue
+            direction, (dy, dx, bit_current, bit_next) = random.choice(list(DIRECTIONS.items()))
+            nx, ny = x + dx, y + dy
+            if 0 < nx < self.config.width - 1 and 0 < ny < self.config.height - 1:
+                if not (start_x <= nx < start_x + pattern_w and start_y <= ny < start_y + pattern_h):
+                    if (self.grid[y][x] & bit_current) != 0:
+                        self.grid[y][x] -= bit_current
+                        self.grid[ny][nx] -= bit_next
+
+
     def save_to_file(self) -> None:
         try:
             with open(self.config.output_file, "w") as f:
@@ -107,7 +130,6 @@ class MazeGenerator:
                 f.write("\n")
                 f.write(f"{self.config.entry[0]},{self.config.entry[1]}\n")
                 f.write(f"{self.config.exit[0]},{self.config.exit[1]}\n")
-                # TODO: Henüz yolu bulmadık, o yüzden şimdilik yer tutucu koyuyoruz.
                 path = self._solve_maze()
                 f.write(f"{path}\n")
         except Exception as e:
