@@ -12,7 +12,6 @@ def main() -> None:
         generator.generate()
         generator.save_to_file()
         
-        # Sınıftaki doğru değişken adını (küçük harflerle) çağırıyoruz:
         output_filepath = config.output_file 
         
         start_ui(output_filepath, generator)

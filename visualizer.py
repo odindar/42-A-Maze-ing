@@ -156,7 +156,6 @@ def start_ui(output_file: str, generator: Any) -> None:
             break
 
         if choice == '1':
-            # Generator objesini kullanarak yeni labirenti üretip dosyaya yazdırıyoruz
             generator.generate()
             generator.save_to_file()
         elif choice == '2':
