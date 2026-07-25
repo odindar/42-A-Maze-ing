@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-
-
-from typing import Tuple
-
 from maze_config import MazeConfig
 
 
@@ -17,9 +12,9 @@ def parse_int(line: str) -> int:
     return value
 
 
-def parse_tuple(line: str) -> Tuple[int, int]:
+def parse_tuple(line: str) -> tuple[int, int]:
     parts: list[str] = line.split("=")
-    value: Tuple[int, int] = (0, 0)
+    value: tuple[int, int] = (0, 0)
     if len(parts) == 2:
         tuple_prts: list[str] = parts[1].split(",")
         if len(tuple_prts) == 2:
@@ -33,8 +28,8 @@ def parse_tuple(line: str) -> Tuple[int, int]:
 def parser_config() -> MazeConfig:
     width: int = 0
     height: int = 0
-    entry: Tuple[int, int] = (0, 0)
-    exit: Tuple[int, int] = (0, 0)
+    entry: tuple[int, int] = (0, 0)
+    exit: tuple[int, int] = (0, 0)
     output_file: str = ""
     is_perfect: bool = False
     seed: int | None = None

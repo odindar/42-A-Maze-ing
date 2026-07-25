@@ -5,10 +5,13 @@ Handles parsing of the hex maze file and terminal rendering.
 
 import os
 import sys
-from typing import List, Tuple, Dict, Any
+from typing import Any
+
+from maze_generator import MazeGenerator
+from parser import parser_config
 
 # ANSI Color Codes for terminal UI
-COLORS: Dict[str, str] = {
+COLORS: dict[str, str] = {
     "reset": "\033[0m",
     "indigo": "\033[38;5;54m",
     "navy": "\033[38;5;17m",
@@ -20,9 +23,9 @@ COLORS: Dict[str, str] = {
     "pattern_42": "\033[48;5;226m"
 }
 
-COLOR_NAMES: List[str] = ["indigo", "navy", "khaki", "anthracite"]
+COLOR_NAMES: list[str] = ["indigo", "navy", "khaki", "anthracite"]
 
-def parse_maze_file(filepath: str) -> Tuple[List[str], Tuple[int, int], Tuple[int, int], str]:
+def parse_maze_file(filepath: str) -> tuple[list[str], tuple[int, int], tuple[int, int], str]:
     """Reads the generated hexadecimal maze output file."""
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
@@ -31,7 +34,7 @@ def parse_maze_file(filepath: str) -> Tuple[List[str], Tuple[int, int], Tuple[in
         print(f"Error: Maze output file '{filepath}' not found.")
         sys.exit(1)
 
-    hex_grid: List[str] = []
+    hex_grid: list[str] = []
     idx: int = 0
     while idx < len(lines) and lines[idx] != "":
         hex_grid.append(lines[idx])
@@ -56,15 +59,15 @@ def parse_maze_file(filepath: str) -> Tuple[List[str], Tuple[int, int], Tuple[in
     return hex_grid, (e_x, e_y), (ex_x, ex_y), path
 
 
-def build_ascii_grid(hex_grid: List[str]) -> List[List[str]]:
+def build_ascii_grid(hex_grid: list[str]) -> list[list[str]]:
     """Converts the hexadecimal grid into an ASCII character matrix."""
     height: int = len(hex_grid)
     width: int = len(hex_grid[0]) if height > 0 else 0
 
     grid_h: int = height * 2 + 1
     grid_w: int = width * 4 + 1
-    
-    ascii_grid: List[List[str]] = [[' ' for _ in range(grid_w)] for _ in range(grid_h)]
+
+    ascii_grid: list[list[str]] = [[' ' for _ in range(grid_w)] for _ in range(grid_h)]
 
     for y in range(height + 1):
         for x in range(width + 1):
@@ -73,7 +76,7 @@ def build_ascii_grid(hex_grid: List[str]) -> List[List[str]]:
     for y in range(height):
         for x in range(width):
             val: int = int(hex_grid[y][x], 16)
-            
+
             if val & 1:
                 for i in range(1, 4): ascii_grid[y * 2][x * 4 + i] = '-'
             if val & 2:
@@ -89,15 +92,15 @@ def build_ascii_grid(hex_grid: List[str]) -> List[List[str]]:
     return ascii_grid
 
 
-def render_maze(ascii_grid: List[List[str]],
-                entry: Tuple[int, int],
-                exit_pos: Tuple[int, int],
+def render_maze(ascii_grid: list[list[str]],
+                entry: tuple[int, int],
+                exit_pos: tuple[int, int],
                 path: str,
                 show_path: bool,
                 wall_color: str) -> None:
     """Prints the ASCII grid to the terminal with applied colors and path."""
-    grid_copy: List[List[str]] = [row[:] for row in ascii_grid]
-    
+    grid_copy: list[list[str]] = [row[:] for row in ascii_grid]
+
     if show_path:
         cx, cy = entry
         grid_copy[cy * 2 + 1][cx * 4 + 2] = '.'
@@ -110,12 +113,12 @@ def render_maze(ascii_grid: List[List[str]],
 
     color_code: str = COLORS[wall_color]
     reset: str = COLORS["reset"]
-    
+
     for y, row in enumerate(grid_copy):
         row_str: str = ""
         for x, char in enumerate(row):
             maze_y, maze_x = (y - 1) // 2, (x - 2) // 4
-            
+
             if char in ('+', '-', '|'):
                 row_str += f"{color_code}{char}{reset}"
             elif char == '#':
@@ -135,20 +138,20 @@ def start_ui(output_file: str, generator: Any) -> None:
     """Main interactive loop for the visualizer."""
     show_path: bool = False
     color_idx: int = 0
-    
+
     while True:
         hex_grid, entry, exit_pos, path = parse_maze_file(output_file)
         ascii_grid = build_ascii_grid(hex_grid)
-        
+
         os.system('cls' if os.name == 'nt' else 'clear')
         render_maze(ascii_grid, entry, exit_pos, path, show_path, COLOR_NAMES[color_idx])
-        
+
         print("\n=== A-Maze-ing ===")
         print("1. Re-generate a new maze")
         print("2. Show/Hide the shortest path")
         print("3. Change wall colours")
         print("4. Quit")
-        
+
         try:
             choice = input("Choice? (1-4): ").strip()
         except KeyboardInterrupt:
@@ -156,8 +159,10 @@ def start_ui(output_file: str, generator: Any) -> None:
             break
 
         if choice == '1':
-            generator.generate()
-            generator.save_to_file()
+            config = parser_config()
+            new_gen = MazeGenerator(config)
+            new_gen.generate()
+            new_gen.save_to_file()
         elif choice == '2':
             show_path = not show_path
         elif choice == '3':

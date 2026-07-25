@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
-
 import random
 from collections import deque
+
 from maze_config import MazeConfig
 
 DIRECTIONS = {
@@ -34,10 +33,13 @@ class MazeGenerator:
         ]
         pattern_h = len(pattern)
         pattern_w = len(pattern[0])
+
         if self.config.width < pattern_w + 2 or self.config.height < pattern_h + 2:
             return
-        start_y = (self.config.height - pattern_h) // 2
-        start_x = (self.config.width - pattern_w) // 2
+
+        start_y = self.config.height // 2 - 2
+        start_x = self.config.width // 2 - 3
+
         for y in range(pattern_h):
             for x in range(pattern_w):
                 if pattern[y][x] == "1":
@@ -47,17 +49,22 @@ class MazeGenerator:
         neighbors = []
         for direction, (dy, dx, _, _) in DIRECTIONS.items():
             nx, ny = x + dx, y + dy
-            if 0 <= nx < self.config.width and 0 <= ny < self.config.height:
-                if not self.visited[ny][nx]:
-                    neighbors.append((direction, nx, ny))
+            if (
+                0 <= nx < self.config.width
+                and 0 <= ny < self.config.height
+                and not self.visited[ny][nx]
+            ):
+                neighbors.append((direction, nx, ny))
         return neighbors
 
     def generate(self) -> None:
         if hasattr(self.config, "seed") and self.config.seed is not None:
             random.seed(self.config.seed)
+
         start_x, start_y = self.config.entry
         self.visited[start_y][start_x] = True
         stack: list[tuple[int, int]] = [(start_x, start_y)]
+
         while stack:
             current_x, current_y = stack[-1]
             neighbors = self._get_unvisited_neighbors(current_x, current_y)
@@ -70,9 +77,9 @@ class MazeGenerator:
                 stack.append((next_x, next_y))
             else:
                 stack.pop()
+
         if not self.config.perfect:
             self._make_imperfect()
-
 
     def _solve_maze(self) -> str:
         entry: tuple[int, int] = self.config.entry
@@ -80,6 +87,7 @@ class MazeGenerator:
 
         if entry == exit:
             return ""
+
         queue = deque([(entry[0], entry[1], "")])
         visited: set = set()
         visited.add(entry)
@@ -93,33 +101,97 @@ class MazeGenerator:
             for direction_char, (dy, dx, wall_bit, _) in DIRECTIONS.items():
                 if (cur_value & wall_bit) == 0:
                     nx, ny = cx + dx, cy + dy
-                    if 0 <= nx < self.config.width and 0 <= ny < self.config.height:
-                        if (nx, ny) not in visited:
-                            visited.add((nx, ny))
-                            queue.append((nx, ny, path + direction_char))
+                    if (
+                        0 <= nx < self.config.width
+                        and 0 <= ny < self.config.height
+                        and (nx, ny) not in visited
+                    ):
+                        visited.add((nx, ny))
+                        queue.append((nx, ny, path + direction_char))
         return ""
 
-
     def _make_imperfect(self) -> None:
-        pattern_w, pattern_h = 9, 5
-        start_x = (self.config.width - pattern_w) // 2
-        start_y = (self.config.height - pattern_h) // 2
-        walls_to_break = (self.config.width * self.config.height) // 20
-        if walls_to_break == 0:
-            walls_to_break = 1
-        for _ in range(walls_to_break):
-            x = random.randint(1, self.config.width - 2)
-            y = random.randint(1, self.config.height - 2)
-            if start_x <= x < start_x + pattern_w and start_y <= y < start_y + pattern_h:
-                continue
-            direction, (dy, dx, bit_current, bit_next) = random.choice(list(DIRECTIONS.items()))
-            nx, ny = x + dx, y + dy
-            if 0 < nx < self.config.width - 1 and 0 < ny < self.config.height - 1:
-                if not (start_x <= nx < start_x + pattern_w and start_y <= ny < start_y + pattern_h):
-                    if (self.grid[y][x] & bit_current) != 0:
+        import random
+
+        pattern = [
+            "1000111",
+            "1000001",
+            "1110111",
+            "0010100",
+            "0010111",
+        ]
+        pattern_h = len(pattern)
+        pattern_w = len(pattern[0])
+
+        start_y = self.config.height // 2 - 2
+        start_x = self.config.width // 2 - 3
+
+        def is_protected(cx: int, cy: int) -> bool:
+            if (
+                start_x <= cx < start_x + pattern_w
+                and start_y <= cy < start_y + pattern_h
+            ):
+                return pattern[cy - start_y][cx - start_x] == "1"
+            return False
+
+        dead_end_values = {7, 11, 13, 14}
+
+        # ADIM 1: Haritadaki TÜM çıkmaz sokakları (dead-ends) bul ve aç
+        for y in range(self.config.height):
+            for x in range(self.config.width):
+                if is_protected(x, y):
+                    continue
+
+                if self.grid[y][x] in dead_end_values:
+                    possible_walls = []
+                    for direction, (dy, dx, bit_current, bit_next) in DIRECTIONS.items():
+                        nx, ny = x + dx, y + dy
+
+                        if (
+                            0 <= nx < self.config.width
+                            and 0 <= ny < self.config.height
+                            and not is_protected(nx, ny)
+                            and (self.grid[y][x] & bit_current) != 0
+                        ):
+                            possible_walls.append((nx, ny, bit_current, bit_next))
+
+                    if possible_walls:
+                        nx, ny, bit_current, bit_next = random.choice(possible_walls)
                         self.grid[y][x] -= bit_current
                         self.grid[ny][nx] -= bit_next
 
+        # ADIM 2: Köşeler ve Merkez Garantisi (Pac-Man Ready)
+        critical_points = [
+            (0, 0),
+            (self.config.width - 1, 0),
+            (0, self.config.height - 1),
+            (self.config.width - 1, self.config.height - 1),
+            (self.config.width // 2, self.config.height // 2),
+        ]
+
+        for cx, cy in critical_points:
+            if is_protected(cx, cy):
+                continue
+
+            while bin(self.grid[cy][cx]).count("1") > 2:
+                possible_walls = []
+                for direction, (dy, dx, bit_current, bit_next) in DIRECTIONS.items():
+                    nx, ny = cx + dx, cy + dy
+
+                    if (
+                        0 <= nx < self.config.width
+                        and 0 <= ny < self.config.height
+                        and not is_protected(nx, ny)
+                        and (self.grid[cy][cx] & bit_current) != 0
+                    ):
+                        possible_walls.append((nx, ny, bit_current, bit_next))
+
+                if possible_walls:
+                    nx, ny, bit_current, bit_next = random.choice(possible_walls)
+                    self.grid[cy][cx] -= bit_current
+                    self.grid[ny][nx] -= bit_next
+                else:
+                    break
 
     def save_to_file(self) -> None:
         try:
