@@ -1,14 +1,14 @@
+import sys
+
 from maze_config import MazeConfig
 
 
 def parse_int(line: str) -> int:
-    parts: list[str] = line.split("=")
     value: int = 0
-    if len(parts) == 2:
-        try:
-            value = int(parts[1])
-        except Exception as e:
-            print(f"Error: {e}")
+    try:
+        value = int(line)
+    except ValueError as e:
+       print(f"Error : {e}")
     return value
 
 
@@ -37,26 +37,29 @@ def parser_config() -> MazeConfig:
         with open("config.txt", "r") as config_file:
             output = config_file.readlines()
             for out in output:
-                out = out.strip()
-                if out.startswith("#"):
+                out = out.strip().split("=")
+                if out[0].startswith("#"):
                     continue
-                elif out.startswith("WIDTH"):
-                    width = parse_int(out)
-                elif out.startswith("HEIGHT"):
-                    height = parse_int(out)
-                elif out.startswith("ENTRY"):
-                    entry = parse_tuple(out)
-                elif out.startswith("EXIT"):
-                    exit = parse_tuple(out)
-                elif out.startswith("OUTPUT_FILE"):
-                    output_file = out.split("=")[1]
-                elif out.startswith("PERFECT"):
-                    is_perfect = out.split("=")[1] == "True"
-                elif out.startswith("SEED"):
-                    seed = parse_int(out)
+                elif out[0] == "WIDTH":
+                    width = parse_int(out[1])
+                elif out[0] == "HEIGHT":
+                    height = parse_int(out[1])
+                elif out[0] == "ENTRY":
+                    entry = parse_tuple(f"{out[0]}={out[1]}")
+                elif out[0] == "EXIT":
+                    exit = parse_tuple(f"{out[0]}={out[1]}")
+                elif out[0] == "OUTPUT_FILE":
+                    output_file = out[1]
+                elif out[0] == "PERFECT":
+                    is_perfect = out[1] == "True"
+                elif out[0] == "SEED":
+                    seed = parse_int(out[1])
+                else:
+                    raise ValueError("Config Error")
 
     except Exception as e:
         print(f"Error: {e}")
+        sys.exit(1)
     return MazeConfig(
         width=width,
         height=height,

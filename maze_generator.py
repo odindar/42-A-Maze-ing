@@ -58,7 +58,7 @@ class MazeGenerator:
         return neighbors
 
     def generate(self) -> None:
-        if hasattr(self.config, "seed") and self.config.seed is not None:
+        if hasattr(self.config, "seed") and self.config.seed:
             random.seed(self.config.seed)
 
         start_x, start_y = self.config.entry

@@ -11,10 +11,10 @@ if __name__ == "__main__":
     config = parser_config()
 
     if is_valid_maze(config):
-        generator = MazeGenerator(config)
+        generator: MazeGenerator = MazeGenerator(config)
         generator.generate()
         generator.save_to_file()
         start_ui(config.output_file, generator)
     else:
-        print("Error")
+        print("ERROR: Map is not valid.")
         sys.exit(1)
