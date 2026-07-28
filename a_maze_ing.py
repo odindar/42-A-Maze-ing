@@ -3,12 +3,13 @@
 
 import sys
 
+from maze_config import MazeConfig
 from maze_generator import MazeGenerator
 from parser import is_valid_maze, parser_config
 from visualizer import start_ui
 
 if __name__ == "__main__":
-    config = parser_config()
+    config: MazeConfig = parser_config()
 
     if is_valid_maze(config):
         generator: MazeGenerator = MazeGenerator(config)
