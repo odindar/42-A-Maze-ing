@@ -109,8 +109,9 @@ def parser_config() -> MazeConfig:
 
 def is_valid_maze(maze: MazeConfig) -> bool:
     if maze.width < 7 or maze.height < 5:
-        print("Warning: Maze is too small for display 42 pattern.")
-    return (
+        print("WARNING: Maze is too small for display 42 pattern.")
+
+    if not (
         0 < maze.width
         and 0 < maze.height
         and 0 <= maze.entry[0] < maze.width
@@ -118,4 +119,26 @@ def is_valid_maze(maze: MazeConfig) -> bool:
         and 0 <= maze.exit[0] < maze.width
         and 0 <= maze.exit[1] < maze.height
         and maze.entry != maze.exit
-    )
+    ):
+        print("Error: Invalid entry/exit coordinates or out of bounds.")
+        return False
+    pattern = [
+        "1000111",
+        "1000001",
+        "1110111",
+        "0010100",
+        "0010111",
+    ]
+    if maze.width >= 9 and maze.height >= 7:
+        start_x = maze.width // 2 - 3
+        start_y = maze.height // 2 - 2
+        for px, py in (maze.entry, maze.exit):
+            if (
+                start_x <= px < start_x + 7
+                and start_y <= py < start_y + 5
+                and pattern[py - start_y][px - start_x] == "1"
+            ):
+                    print("Error: ENTRY or EXIT coordinate on 42 pattern wall.")
+                    return False
+
+    return True
