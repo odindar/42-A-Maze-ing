@@ -5,8 +5,8 @@ from maze_config import MazeConfig
 
 DIRECTIONS = {
     "N": (-1, 0, 1, 4),
-    "S": (1, 0, 4, 1),
     "E": (0, 1, 2, 8),
+    "S": (1, 0, 4, 1),
     "W": (0, -1, 8, 2),
 }
 
@@ -24,13 +24,7 @@ class MazeGenerator:
         self._place_42_pattern()
 
     def _place_42_pattern(self) -> None:
-        pattern = [
-            "1000111",
-            "1000001",
-            "1110111",
-            "0010100",
-            "0010111",
-        ]
+        pattern = MazeConfig.PATTERN_42
         pattern_h = len(pattern)
         pattern_w = len(pattern[0])
 
@@ -113,13 +107,7 @@ class MazeGenerator:
     def _make_imperfect(self) -> None:
         import random
 
-        pattern = [
-            "1000111",
-            "1000001",
-            "1110111",
-            "0010100",
-            "0010111",
-        ]
+        pattern = MazeConfig.PATTERN_42
         pattern_h = len(pattern)
         pattern_w = len(pattern[0])
 

@@ -2,6 +2,7 @@
 
 
 from dataclasses import dataclass
+from typing import ClassVar
 
 
 @dataclass
@@ -13,3 +14,10 @@ class MazeConfig:
     output_file: str
     perfect: bool
     seed: int | None = None
+    PATTERN_42: ClassVar[tuple[str, ...]] = (
+            "1000111",
+            "1000001",
+            "1110111",
+            "0010100",
+            "0010111",
+        )
