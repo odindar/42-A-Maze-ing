@@ -105,80 +105,35 @@ class MazeGenerator:
         return ""
 
     def _make_imperfect(self) -> None:
-        import random
+        DEAD_END = {7, 11, 13, 14}
 
-        pattern = MazeConfig.PATTERN_42
-        pattern_h = len(pattern)
-        pattern_w = len(pattern[0])
-
-        start_y = self.config.height // 2 - 2
-        start_x = self.config.width // 2 - 3
-
-        def is_protected(cx: int, cy: int) -> bool:
-            if (
-                start_x <= cx < start_x + pattern_w
-                and start_y <= cy < start_y + pattern_h
-            ):
-                return pattern[cy - start_y][cx - start_x] == "1"
-            return False
-
-        dead_end_values = {7, 11, 13, 14}
+        queue: deque = deque()
 
         for y in range(self.config.height):
             for x in range(self.config.width):
-                if is_protected(x, y):
-                    continue
+                if self.grid[y][x] in DEAD_END:
+                    queue.append((x, y))
 
-                if self.grid[y][x] in dead_end_values:
-                    possible_walls = []
-                    for direction, (dy, dx, bit_current, bit_next) in DIRECTIONS.items():
-                        nx, ny = x + dx, y + dy
+        while queue:
+            x, y = queue.popleft()
 
-                        if (
-                            0 <= nx < self.config.width
-                            and 0 <= ny < self.config.height
-                            and not is_protected(nx, ny)
-                            and (self.grid[y][x] & bit_current) != 0
-                        ):
-                            possible_walls.append((nx, ny, bit_current, bit_next))
-
-                    if possible_walls:
-                        nx, ny, bit_current, bit_next = random.choice(possible_walls)
-                        self.grid[y][x] -= bit_current
-                        self.grid[ny][nx] -= bit_next
-
-        # ADIM 2: Köşeler ve Merkez Garantisi (Pac-Man Ready)
-        critical_points = [
-            (0, 0),
-            (self.config.width - 1, 0),
-            (0, self.config.height - 1),
-            (self.config.width - 1, self.config.height - 1),
-            (self.config.width // 2, self.config.height // 2),
-        ]
-
-        for cx, cy in critical_points:
-            if is_protected(cx, cy):
+            if self.grid[y][x] not in DEAD_END:
                 continue
 
-            while bin(self.grid[cy][cx]).count("1") > 2:
-                possible_walls = []
-                for direction, (dy, dx, bit_current, bit_next) in DIRECTIONS.items():
-                    nx, ny = cx + dx, cy + dy
+            candidates = [
+                (x + dx, y + dy, bc, bn)
+                for _, (dy, dx, bc, bn) in DIRECTIONS.items()
+                if (0 <= x + dx < self.config.width
+                    and 0 <= y + dy < self.config.height
+                    and self.grid[y + dy][x + dx] != 15
+                    and self.grid[y][x] & bc)
+            ]
+            if not candidates:
+                continue
 
-                    if (
-                        0 <= nx < self.config.width
-                        and 0 <= ny < self.config.height
-                        and not is_protected(nx, ny)
-                        and (self.grid[cy][cx] & bit_current) != 0
-                    ):
-                        possible_walls.append((nx, ny, bit_current, bit_next))
-
-                if possible_walls:
-                    nx, ny, bit_current, bit_next = random.choice(possible_walls)
-                    self.grid[cy][cx] -= bit_current
-                    self.grid[ny][nx] -= bit_next
-                else:
-                    break
+            nx, ny, bc, bn = random.choice(candidates)
+            self.grid[y][x]   -= bc
+            self.grid[ny][nx] -= bn
 
     def save_to_file(self) -> None:
         try:
