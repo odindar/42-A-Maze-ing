@@ -11,7 +11,6 @@ from typing import Any
 from maze_generator import MazeGenerator
 from parser import parser_config
 
-# ANSI Color Codes for terminal UI
 COLORS: dict[str, str] = {
     "reset": "\033[0m",
     "indigo": "\033[38;5;54m",
@@ -19,14 +18,13 @@ COLORS: dict[str, str] = {
     "khaki": "\033[38;5;143m",
     "anthracite": "\033[38;5;237m",
     "path": "\033[38;5;39m",      
-    "start": "\033[48;5;118m\033[30m", # Yeşil arka plan, siyah yazı
-    "end": "\033[48;5;196m\033[30m",   # Kırmızı arka plan, siyah yazı
+    "start": "\033[48;5;118m\033[30m", 
+    "end": "\033[48;5;196m\033[30m",   
     "pattern_42": "\033[38;5;226m"     
 }
 
 COLOR_NAMES: list[str] = ["indigo", "navy", "khaki", "anthracite"]
 
-# Duvarları çizerken kullanılacak karakterlerin listesi
 WALL_CHARS = "╋┫┣┻┳┃━┗┛┏┓╹╻╸╺"
 
 def parse_maze_file(filepath: str) -> tuple[list[str], tuple[int, int], tuple[int, int], str]:
@@ -64,7 +62,7 @@ def parse_maze_file(filepath: str) -> tuple[list[str], tuple[int, int], tuple[in
 
 
 def build_ascii_grid(hex_grid: list[str]) -> list[list[str]]:
-    """Converts the hexadecimal grid into an ASCII box-drawing matrix with smart intersections."""
+    """Converts the hexadecimal grid into an ASCII box-drawing matrix with perfect intersections."""
     height: int = len(hex_grid)
     width: int = len(hex_grid[0]) if height > 0 else 0
 
@@ -73,54 +71,62 @@ def build_ascii_grid(hex_grid: list[str]) -> list[list[str]]:
 
     ascii_grid: list[list[str]] = [[' ' for _ in range(grid_w)] for _ in range(grid_h)]
 
-    # Önce sadece yatay ve dikey duvarları yerleştir
+    for y in range(height + 1):
+        for x in range(width + 1):
+            ascii_grid[y * 2][x * 4] = '+'
+
     for y in range(height):
         for x in range(width):
             val: int = int(hex_grid[y][x], 16)
 
             if val & 1:  # Kuzey
-                for i in range(1, 4): ascii_grid[y * 2][x * 4 + i] = '━'
+                for i in range(1, 4): ascii_grid[y * 2][x * 4 + i] = '-'
             if val & 2:  # Doğu
-                ascii_grid[y * 2 + 1][x * 4 + 4] = '┃'
+                ascii_grid[y * 2 + 1][x * 4 + 4] = '|'
             if val & 4:  # Güney
-                for i in range(1, 4): ascii_grid[y * 2 + 2][x * 4 + i] = '━'
+                for i in range(1, 4): ascii_grid[y * 2 + 2][x * 4 + i] = '-'
             if val & 8:  # Batı
-                ascii_grid[y * 2 + 1][x * 4] = '┃'
-            if val == 15:  # 42 deseni hücresi
+                ascii_grid[y * 2 + 1][x * 4] = '|'
+            if val == 15:  # 42 deseni
                 for i in range(1, 4):
-                    ascii_grid[y * 2 + 1][x * 4 + i] = '▒'
+                    ascii_grid[y * 2 + 1][x * 4 + i] = '#'
 
-    # Akıllı Köşe (Smart Intersection) Algoritması
-    # Duvarların geliş yönüne göre en doğru köşe bağlantı parçasını seçer
-    for y in range(height + 1):
-        for x in range(width + 1):
-            grid_y, grid_x = y * 2, x * 4
-            
-            up = (grid_y > 0 and ascii_grid[grid_y - 1][grid_x] == '┃')
-            down = (grid_y < grid_h - 1 and ascii_grid[grid_y + 1][grid_x] == '┃')
-            left = (grid_x > 0 and ascii_grid[grid_y][grid_x - 1] == '━')
-            right = (grid_x < grid_w - 1 and ascii_grid[grid_y][grid_x + 1] == '━')
-            
-            char = ' '
-            if up and down and left and right: char = '╋'
-            elif up and down and left: char = '┫'
-            elif up and down and right: char = '┣'
-            elif left and right and up: char = '┻'
-            elif left and right and down: char = '┳'
-            elif up and down: char = '┃'
-            elif left and right: char = '━'
-            elif up and right: char = '┗'
-            elif up and left: char = '┛'
-            elif down and right: char = '┏'
-            elif down and left: char = '┓'
-            elif up: char = '╹'
-            elif down: char = '╻'
-            elif left: char = '╸'
-            elif right: char = '╺'
-            
-            ascii_grid[grid_y][grid_x] = char
+    final_grid = [[' ' for _ in range(grid_w)] for _ in range(grid_h)]
+    for y in range(grid_h):
+        for x in range(grid_w):
+            char = ascii_grid[y][x]
+            if char == '-':
+                final_grid[y][x] = '━'
+            elif char == '|':
+                final_grid[y][x] = '┃'
+            elif char == '#':
+                final_grid[y][x] = '▒'
+            elif char == '+':
+                up = y > 0 and ascii_grid[y-1][x] == '|'
+                down = y < grid_h - 1 and ascii_grid[y+1][x] == '|'
+                left = x > 0 and ascii_grid[y][x-1] == '-'
+                right = x < grid_w - 1 and ascii_grid[y][x+1] == '-'
 
-    return ascii_grid
+                if up and down and left and right: final_grid[y][x] = '╋'
+                elif up and down and left: final_grid[y][x] = '┫'
+                elif up and down and right: final_grid[y][x] = '┣'
+                elif left and right and up: final_grid[y][x] = '┻'
+                elif left and right and down: final_grid[y][x] = '┳'
+                elif up and down: final_grid[y][x] = '┃'
+                elif left and right: final_grid[y][x] = '━'
+                elif up and right: final_grid[y][x] = '┗'
+                elif up and left: final_grid[y][x] = '┛'
+                elif down and right: final_grid[y][x] = '┏'
+                elif down and left: final_grid[y][x] = '┓'
+                elif up: final_grid[y][x] = '╹'
+                elif down: final_grid[y][x] = '╻'
+                elif left: final_grid[y][x] = '╸'
+                elif right: final_grid[y][x] = '╺'
+                else: final_grid[y][x] = ' '
+            else:
+                final_grid[y][x] = ' '
+
+    return final_grid
 
 
 def get_rendered_lines(ascii_grid: list[list[str]],
@@ -130,21 +136,23 @@ def get_rendered_lines(ascii_grid: list[list[str]],
                        show_path: bool,
                        wall_color: str) -> list[str]:
     """Applies colors and path arrows, returning the grid as a list of strings."""
-    grid_copy: list[list[str]] = [row[:] for row in ascii_grid]
+    grid_copy = [row[:] for row in ascii_grid]
+
+    cx_s, cy_s = entry
+    cx_e, cy_e = exit_pos
+    grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = 'S'
+    grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = 'E'
 
     if show_path:
         cx, cy = entry
         for move in path:
-            if move == 'N':
-                char, nx, ny = '↑', cx, cy - 1
-            elif move == 'S':
-                char, nx, ny = '↓', cx, cy + 1
-            elif move == 'E':
-                char, nx, ny = '→', cx + 1, cy
-            elif move == 'W':
-                char, nx, ny = '←', cx - 1, cy
+            if move == 'N': char, nx, ny = '↑', cx, cy - 1
+            elif move == 'S': char, nx, ny = '↓', cx, cy + 1
+            elif move == 'E': char, nx, ny = '→', cx + 1, cy
+            elif move == 'W': char, nx, ny = '←', cx - 1, cy
 
-            grid_copy[cy * 2 + 1][cx * 4 + 2] = char
+            if grid_copy[cy * 2 + 1][cx * 4 + 2] not in ('S', 'E'):
+                grid_copy[cy * 2 + 1][cx * 4 + 2] = char
             cx, cy = nx, ny
 
     color_code: str = COLORS[wall_color]
@@ -155,18 +163,19 @@ def get_rendered_lines(ascii_grid: list[list[str]],
     for y, row in enumerate(grid_copy):
         row_str: str = ""
         for x, char in enumerate(row):
-            maze_y, maze_x = (y - 1) // 2, (x - 2) // 4
+            is_entry_cell = (y % 2 != 0) and (x % 4 != 0) and ((y - 1) // 2 == entry[1]) and (x // 4 == entry[0])
+            is_exit_cell = (y % 2 != 0) and (x % 4 != 0) and ((y - 1) // 2 == exit_pos[1]) and (x // 4 == exit_pos[0])
 
-            if char in WALL_CHARS:
+            if is_entry_cell:
+                row_str += f"{COLORS['start']}{char}{reset}"
+            elif is_exit_cell:
+                row_str += f"{COLORS['end']}{char}{reset}"
+            elif char in WALL_CHARS:
                 row_str += f"{color_code}{char}{reset}"
             elif char == '▒':
                 row_str += f"{COLORS['pattern_42']}▒{reset}"
             elif char in ('↑', '↓', '→', '←'):
                 row_str += f"\033[1m{COLORS['path']}{char}{reset}"
-            elif maze_x == entry[0] and maze_y == entry[1] and (y % 2 != 0) and (x % 4 == 2):
-                 row_str += f"{COLORS['start']} S {reset}"
-            elif maze_x == exit_pos[0] and maze_y == exit_pos[1] and (y % 2 != 0) and (x % 4 == 2):
-                 row_str += f"{COLORS['end']} E {reset}"
             else:
                 row_str += char
         lines_out.append(row_str)
@@ -228,7 +237,7 @@ def start_ui(output_file: str, generator: Any) -> None:
                 lines = get_rendered_lines(partial_grid, entry, exit_pos, "", False, COLOR_NAMES[color_idx])
                 sys.stdout.write('\033[H' + '\n'.join(lines) + '\n')
                 sys.stdout.flush()
-                time.sleep(0.015) 
+                time.sleep(0.04) 
 
         elif choice == '2':
             show_path = not show_path
@@ -239,7 +248,7 @@ def start_ui(output_file: str, generator: Any) -> None:
                     current_path += move
                     lines = get_rendered_lines(ascii_grid, entry, exit_pos, current_path, True, COLOR_NAMES[color_idx])
                     draw_screen(lines, menu_text)
-                    time.sleep(0.02) 
+                    time.sleep(0.05) 
 
         elif choice == '3':
             color_idx = (color_idx + 1) % len(COLOR_NAMES)
