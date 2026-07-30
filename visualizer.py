@@ -79,15 +79,15 @@ def build_ascii_grid(hex_grid: list[str]) -> list[list[str]]:
         for x in range(width):
             val: int = int(hex_grid[y][x], 16)
 
-            if val & 1:  # Kuzey
+            if val & 1:
                 for i in range(1, 4): ascii_grid[y * 2][x * 4 + i] = '-'
-            if val & 2:  # Doğu
+            if val & 2:
                 ascii_grid[y * 2 + 1][x * 4 + 4] = '|'
-            if val & 4:  # Güney
+            if val & 4:
                 for i in range(1, 4): ascii_grid[y * 2 + 2][x * 4 + i] = '-'
-            if val & 8:  # Batı
+            if val & 8:
                 ascii_grid[y * 2 + 1][x * 4] = '|'
-            if val == 15:  # 42 deseni
+            if val == 15:
                 for i in range(1, 4):
                     ascii_grid[y * 2 + 1][x * 4 + i] = '#'
 
@@ -140,8 +140,12 @@ def get_rendered_lines(ascii_grid: list[list[str]],
 
     cx_s, cy_s = entry
     cx_e, cy_e = exit_pos
-    grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = 'S'
-    grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = 'E'
+    
+    if cy_s * 2 + 1 < len(grid_copy):
+        grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = 'S'
+        
+    if cy_e * 2 + 1 < len(grid_copy):
+        grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = 'E'
 
     if show_path:
         cx, cy = entry
@@ -151,7 +155,7 @@ def get_rendered_lines(ascii_grid: list[list[str]],
             elif move == 'E': char, nx, ny = '→', cx + 1, cy
             elif move == 'W': char, nx, ny = '←', cx - 1, cy
 
-            if grid_copy[cy * 2 + 1][cx * 4 + 2] not in ('S', 'E'):
+            if cy * 2 + 1 < len(grid_copy) and grid_copy[cy * 2 + 1][cx * 4 + 2] not in ('S', 'E'):
                 grid_copy[cy * 2 + 1][cx * 4 + 2] = char
             cx, cy = nx, ny
 
