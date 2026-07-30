@@ -52,7 +52,7 @@ class MazeGenerator:
         return neighbors
 
     def generate(self) -> None:
-        if hasattr(self.config, "seed") and self.config.seed:
+        if hasattr(self.config, "seed") and self.config.seed != None:
             random.seed(self.config.seed)
 
         start_x, start_y = self.config.entry
@@ -124,7 +124,6 @@ class MazeGenerator:
 
         dead_end_values = {7, 11, 13, 14}
 
-        # ADIM 1: Haritadaki TÜM çıkmaz sokakları (dead-ends) bul ve aç
         for y in range(self.config.height):
             for x in range(self.config.width):
                 if is_protected(x, y):

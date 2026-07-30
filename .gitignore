@@ -3,4 +3,3 @@ __pycache__/
 .mypy_cache/
 maze.txt
 config.txt
-TODO.md
