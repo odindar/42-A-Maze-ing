@@ -31,8 +31,8 @@ class MazeGenerator:
         if self.config.width < pattern_w + 2 or self.config.height < pattern_h + 2:
             return
 
-        start_y = self.config.height // 2 - 2
-        start_x = self.config.width // 2 - 3
+        start_y = self.config.height // 2 - (pattern_h // 2)
+        start_x = self.config.width // 2 - (pattern_w // 2)
 
         for y in range(pattern_h):
             for x in range(pattern_w):
@@ -144,11 +144,7 @@ class MazeGenerator:
                 f.write("\n")
                 f.write(f"{self.config.entry[0]},{self.config.entry[1]}\n")
                 f.write(f"{self.config.exit[0]},{self.config.exit[1]}\n")
-                path = self._solve_maze()
+                path: str = self._solve_maze()
                 f.write(f"{path}\n")
         except Exception as e:
             print(f"Error writing to output file: {e}")
-
-    def debug_print(self) -> None:
-        for row in self.grid:
-            print("".join(f"{cell:X}" for cell in row))

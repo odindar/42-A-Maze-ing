@@ -13,21 +13,19 @@ def parse_int(line: str) -> int:
     return value
 
 
-def parse_tuple(line: str) -> tuple[int, int]:
-    parts: list[str] = line.split("=")
-    value: tuple[int, int] = (0, 0)
-    if len(parts) != 2:
-        print("ERROR: Invalid tuple format")
-        sys.exit(1)
-    tuple_prts: list[str] = parts[1].split(",")
+def parse_tuple(val: str) -> tuple[int, int]:
+    tuple_prts: list[str] = val.split(",")
+
     if len(tuple_prts) != 2:
         print("ERROR: Invalid tuple format")
         sys.exit(1)
+
     try:
         value = (int(tuple_prts[0]), int(tuple_prts[1]))
     except ValueError:
         print("ERROR: Invalid integer value")
         sys.exit(1)
+
     return value
 
 
@@ -43,7 +41,7 @@ def parser_config() -> MazeConfig:
     entry: tuple[int, int] = (-1, -1)
     exit: tuple[int, int] = (-1, -1)
     output_file: str = ""
-    is_perfect: bool = False
+    is_perfect: bool | None = None
     seed: int | None = None
 
     try:
@@ -65,31 +63,32 @@ def parser_config() -> MazeConfig:
                 elif key == "HEIGHT":
                     height = parse_int(val)
                 elif key == "ENTRY":
-                    entry = parse_tuple(f"{key}={val}")
+                    entry = parse_tuple(val)
                 elif key == "EXIT":
-                    exit = parse_tuple(f"{key}={val}")
+                    exit = parse_tuple(val)
                 elif key == "OUTPUT_FILE":
                     output_file = val
                 elif key == "PERFECT":
-                    if val == "True":
+                    val = val.upper()
+                    if val == "TRUE":
                         is_perfect = True
-                    elif val == "False":
+                    elif val == "FALSE":
                         is_perfect = False
                     else:
-                        print(f"Error: Invalid boolean parameter for PERFECT -> {val}")
+                        print("ERROR: Invalid boolean parameter for PERFECT")
                         sys.exit(1)
                 elif key == "SEED":
                     seed = parse_int(val)
                 else:
-                    raise ValueError("Config Error")
+                    raise ValueError(f"ERROR: Unknown configuration key: '{key}'")
 
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
     if (
-        width == 0
-        or height == 0
-        or output_file == ""
+        width <= 0
+        or height <= 0
+        or not output_file.strip()
         or entry == (-1, -1)
         or exit == (-1, -1)
         or is_perfect is None
@@ -106,10 +105,12 @@ def parser_config() -> MazeConfig:
         seed=seed,
     )
 
-
 def is_valid_maze(maze: MazeConfig) -> bool:
-    if maze.width < 7 or maze.height < 5:
-        print("WARNING: Maze is too small for display 42 pattern.")
+    pattern_w = len(MazeConfig.PATTERN_42[0])
+    pattern_h = len(MazeConfig.PATTERN_42)
+
+    if maze.width < pattern_w + 2 or maze.height < pattern_h + 2:
+        print("ERROR: Maze is too small for display 42 pattern.")
 
     if not (
         0 < maze.width
@@ -122,16 +123,17 @@ def is_valid_maze(maze: MazeConfig) -> bool:
     ):
         print("Error: Invalid entry/exit coordinates or out of bounds.")
         return False
-    if maze.width >= 9 and maze.height >= 7:
-        start_x = maze.width // 2 - 3
-        start_y = maze.height // 2 - 2
+
+    if maze.width >= pattern_w + 2 and maze.height >= pattern_h + 2:
+        start_x = maze.width // 2 - (pattern_w // 2)
+        start_y = maze.height // 2 - (pattern_h // 2)
         for px, py in (maze.entry, maze.exit):
             if (
-                start_x <= px < start_x + 7
-                and start_y <= py < start_y + 5
+                start_x <= px < start_x + pattern_w
+                and start_y <= py < start_y + pattern_h
                 and MazeConfig.PATTERN_42[py - start_y][px - start_x] == "1"
             ):
-                    print("Error: ENTRY or EXIT coordinate on 42 pattern wall.")
-                    return False
+                print("Error: ENTRY or EXIT coordinate on 42 pattern wall.")
+                return False
 
     return True

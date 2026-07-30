@@ -143,7 +143,6 @@ def start_ui(output_file: str, generator: Any) -> None:
         hex_grid, entry, exit_pos, path = parse_maze_file(output_file)
         ascii_grid = build_ascii_grid(hex_grid)
 
-        os.system('cls' if os.name == 'nt' else 'clear')
         render_maze(ascii_grid, entry, exit_pos, path, show_path, COLOR_NAMES[color_idx])
 
         print("\n=== A-Maze-ing ===")
