@@ -46,15 +46,15 @@ def parser_config() -> MazeConfig:
 
     try:
         with open(file_name, "r") as config_file:
-            output = config_file.readlines()
+            output: list[str] = config_file.readlines()
             for line in output:
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
 
-                out = line.split("=", 1)
+                out: str = line.split("=", 1)
                 if len(out) != 2:
-                    print(f"Error: Invalid line format -> {line}")
+                    print(f"ERROR: Invalid line format -> {line}")
                     sys.exit(1)
                 key = out[0].strip().upper()
                 val = out[1].strip()
@@ -82,8 +82,8 @@ def parser_config() -> MazeConfig:
                 else:
                     raise ValueError(f"ERROR: Unknown configuration key: '{key}'")
 
-    except Exception as e:
-        print(f"Error: {e}")
+    except ValueError as e:
+        print(f"{e}")
         sys.exit(1)
     if (
         width <= 0
@@ -93,7 +93,7 @@ def parser_config() -> MazeConfig:
         or exit == (-1, -1)
         or is_perfect is None
     ):
-        print("Error: Missing mandatory configuration keys")
+        print("ERROR: Missing mandatory configuration keys")
         sys.exit(1)
     return MazeConfig(
         width=width,
@@ -101,13 +101,13 @@ def parser_config() -> MazeConfig:
         entry=entry,
         exit=exit,
         output_file=output_file,
-        perfect=is_perfect,
+        is_perfect=is_perfect,
         seed=seed,
     )
 
 def is_valid_maze(maze: MazeConfig) -> bool:
-    pattern_w = len(MazeConfig.PATTERN_42[0])
-    pattern_h = len(MazeConfig.PATTERN_42)
+    pattern_w: int = len(MazeConfig.PATTERN_42[0])
+    pattern_h: int = len(MazeConfig.PATTERN_42)
 
     if maze.width < pattern_w + 2 or maze.height < pattern_h + 2:
         print("ERROR: Maze is too small for display 42 pattern.")
@@ -121,12 +121,12 @@ def is_valid_maze(maze: MazeConfig) -> bool:
         and 0 <= maze.exit[1] < maze.height
         and maze.entry != maze.exit
     ):
-        print("Error: Invalid entry/exit coordinates or out of bounds.")
+        print("ERROR: Invalid entry/exit coordinates or out of bounds.")
         return False
 
     if maze.width >= pattern_w + 2 and maze.height >= pattern_h + 2:
-        start_x = maze.width // 2 - (pattern_w // 2)
-        start_y = maze.height // 2 - (pattern_h // 2)
+        start_x: int = maze.width // 2 - (pattern_w // 2)
+        start_y: int = maze.height // 2 - (pattern_h // 2)
         for px, py in (maze.entry, maze.exit):
             if (
                 start_x <= px < start_x + pattern_w

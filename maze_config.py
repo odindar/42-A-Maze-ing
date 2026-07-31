@@ -12,7 +12,7 @@ class MazeConfig:
     entry: tuple[int, int]
     exit: tuple[int, int]
     output_file: str
-    perfect: bool
+    is_perfect: bool
     seed: int | None = None
     PATTERN_42: ClassVar[tuple[str, ...]] = (
             "1000111",

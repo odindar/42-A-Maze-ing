@@ -40,7 +40,7 @@ class MazeGenerator:
                     self.visited[start_y + y][start_x + x] = True
 
     def _get_unvisited_neighbors(self, x: int, y: int) -> list[tuple[str, int, int]]:
-        neighbors = []
+        neighbors: list[str, int, int] = []
         for direction, (dy, dx, _, _) in DIRECTIONS.items():
             nx, ny = x + dx, y + dy
             if (
@@ -72,7 +72,7 @@ class MazeGenerator:
             else:
                 stack.pop()
 
-        if not self.config.perfect:
+        if not self.config.is_perfect:
             self._make_imperfect()
 
     def _solve_maze(self) -> str:
@@ -83,24 +83,24 @@ class MazeGenerator:
             return ""
 
         queue = deque([(entry[0], entry[1], "")])
-        visited: set = set()
-        visited.add(entry)
+        self.visited = [[False for _ in range(self.config.width)] for _ in range(self.config.height)]
+        self.visited[entry[1]][entry[0]] = True
 
         while queue:
             cx, cy, path = queue.popleft()
             if (cx, cy) == exit:
                 return path
 
-            cur_value = self.grid[cy][cx]
+            cur_value: int = self.grid[cy][cx]
             for direction_char, (dy, dx, wall_bit, _) in DIRECTIONS.items():
                 if (cur_value & wall_bit) == 0:
                     nx, ny = cx + dx, cy + dy
                     if (
                         0 <= nx < self.config.width
                         and 0 <= ny < self.config.height
-                        and (nx, ny) not in visited
+                        and not self.visited[ny][nx]
                     ):
-                        visited.add((nx, ny))
+                        self.visited[ny][nx] = True
                         queue.append((nx, ny, path + direction_char))
         return ""
 
@@ -120,13 +120,15 @@ class MazeGenerator:
             if self.grid[y][x] not in DEAD_END:
                 continue
 
-            candidates = [
+            candidates: list[tuple[int, int, int, int]] = [
                 (x + dx, y + dy, bc, bn)
                 for _, (dy, dx, bc, bn) in DIRECTIONS.items()
-                if (0 <= x + dx < self.config.width
+                if (
+                    0 <= x + dx < self.config.width
                     and 0 <= y + dy < self.config.height
                     and self.grid[y + dy][x + dx] != 15
-                    and self.grid[y][x] & bc)
+                    and self.grid[y][x] & bc
+                )
             ]
             if not candidates:
                 continue
