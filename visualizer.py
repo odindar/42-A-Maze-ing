@@ -17,17 +17,20 @@ COLORS: dict[str, str] = {
     "navy": "\033[38;5;17m",
     "khaki": "\033[38;5;143m",
     "anthracite": "\033[38;5;237m",
-    "path": "\033[38;5;39m",      
-    "start": "\033[48;5;118m\033[30m", 
-    "end": "\033[48;5;196m\033[30m",   
-    "pattern_42": "\033[38;5;226m"     
+    "path": "\033[38;5;39m",
+    "start": "\033[48;5;118m\033[30m",
+    "end": "\033[48;5;196m\033[30m",
+    "pattern_42": "\033[38;5;226m"
 }
 
 COLOR_NAMES: list[str] = ["indigo", "navy", "khaki", "anthracite"]
 
 WALL_CHARS = "╋┫┣┻┳┃━┗┛┏┓╹╻╸╺"
 
-def parse_maze_file(filepath: str) -> tuple[list[str], tuple[int, int], tuple[int, int], str]:
+
+def parse_maze_file(
+    filepath: str
+) -> tuple[list[str], tuple[int, int], tuple[int, int], str]:
     """Reads the generated hexadecimal maze output file."""
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
@@ -42,7 +45,7 @@ def parse_maze_file(filepath: str) -> tuple[list[str], tuple[int, int], tuple[in
         hex_grid.append(lines[idx])
         idx += 1
 
-    idx += 1 
+    idx += 1
 
     try:
         entry_str = lines[idx].split('#')[0].strip()
@@ -62,14 +65,14 @@ def parse_maze_file(filepath: str) -> tuple[list[str], tuple[int, int], tuple[in
 
 
 def build_ascii_grid(hex_grid: list[str]) -> list[list[str]]:
-    """Converts the hexadecimal grid into an ASCII box-drawing matrix with perfect intersections."""
+    """Converts the hexadecimal grid into an ASCII box-drawing matrix."""
     height: int = len(hex_grid)
     width: int = len(hex_grid[0]) if height > 0 else 0
 
     grid_h: int = height * 2 + 1
     grid_w: int = width * 4 + 1
 
-    ascii_grid: list[list[str]] = [[' ' for _ in range(grid_w)] for _ in range(grid_h)]
+    ascii_grid = [[' ' for _ in range(grid_w)] for _ in range(grid_h)]
 
     for y in range(height + 1):
         for x in range(width + 1):
@@ -80,11 +83,13 @@ def build_ascii_grid(hex_grid: list[str]) -> list[list[str]]:
             val: int = int(hex_grid[y][x], 16)
 
             if val & 1:
-                for i in range(1, 4): ascii_grid[y * 2][x * 4 + i] = '-'
+                for i in range(1, 4):
+                    ascii_grid[y * 2][x * 4 + i] = '-'
             if val & 2:
                 ascii_grid[y * 2 + 1][x * 4 + 4] = '|'
             if val & 4:
-                for i in range(1, 4): ascii_grid[y * 2 + 2][x * 4 + i] = '-'
+                for i in range(1, 4):
+                    ascii_grid[y * 2 + 2][x * 4 + i] = '-'
             if val & 8:
                 ascii_grid[y * 2 + 1][x * 4] = '|'
             if val == 15:
@@ -102,73 +107,107 @@ def build_ascii_grid(hex_grid: list[str]) -> list[list[str]]:
             elif char == '#':
                 final_grid[y][x] = '▒'
             elif char == '+':
-                up = y > 0 and ascii_grid[y-1][x] == '|'
-                down = y < grid_h - 1 and ascii_grid[y+1][x] == '|'
-                left = x > 0 and ascii_grid[y][x-1] == '-'
-                right = x < grid_w - 1 and ascii_grid[y][x+1] == '-'
+                up = y > 0 and ascii_grid[y - 1][x] == '|'
+                down = y < grid_h - 1 and ascii_grid[y + 1][x] == '|'
+                left = x > 0 and ascii_grid[y][x - 1] == '-'
+                right = x < grid_w - 1 and ascii_grid[y][x + 1] == '-'
 
-                if up and down and left and right: final_grid[y][x] = '╋'
-                elif up and down and left: final_grid[y][x] = '┫'
-                elif up and down and right: final_grid[y][x] = '┣'
-                elif left and right and up: final_grid[y][x] = '┻'
-                elif left and right and down: final_grid[y][x] = '┳'
-                elif up and down: final_grid[y][x] = '┃'
-                elif left and right: final_grid[y][x] = '━'
-                elif up and right: final_grid[y][x] = '┗'
-                elif up and left: final_grid[y][x] = '┛'
-                elif down and right: final_grid[y][x] = '┏'
-                elif down and left: final_grid[y][x] = '┓'
-                elif up: final_grid[y][x] = '╹'
-                elif down: final_grid[y][x] = '╻'
-                elif left: final_grid[y][x] = '╸'
-                elif right: final_grid[y][x] = '╺'
-                else: final_grid[y][x] = ' '
+                if up and down and left and right:
+                    final_grid[y][x] = '╋'
+                elif up and down and left:
+                    final_grid[y][x] = '┫'
+                elif up and down and right:
+                    final_grid[y][x] = '┣'
+                elif left and right and up:
+                    final_grid[y][x] = '┻'
+                elif left and right and down:
+                    final_grid[y][x] = '┳'
+                elif up and down:
+                    final_grid[y][x] = '┃'
+                elif left and right:
+                    final_grid[y][x] = '━'
+                elif up and right:
+                    final_grid[y][x] = '┗'
+                elif up and left:
+                    final_grid[y][x] = '┛'
+                elif down and right:
+                    final_grid[y][x] = '┏'
+                elif down and left:
+                    final_grid[y][x] = '┓'
+                elif up:
+                    final_grid[y][x] = '╹'
+                elif down:
+                    final_grid[y][x] = '╻'
+                elif left:
+                    final_grid[y][x] = '╸'
+                elif right:
+                    final_grid[y][x] = '╺'
+                else:
+                    final_grid[y][x] = ' '
             else:
                 final_grid[y][x] = ' '
 
     return final_grid
 
 
-def get_rendered_lines(ascii_grid: list[list[str]],
-                       entry: tuple[int, int],
-                       exit_pos: tuple[int, int],
-                       path: str,
-                       show_path: bool,
-                       wall_color: str) -> list[str]:
-    """Applies colors and path arrows, returning the grid as a list of strings."""
+def get_rendered_lines(
+    ascii_grid: list[list[str]],
+    entry: tuple[int, int],
+    exit_pos: tuple[int, int],
+    path: str,
+    show_path: bool,
+    wall_color: str
+) -> list[str]:
+    """Applies colors and path arrows, returning grid as a list of strings."""
     grid_copy = [row[:] for row in ascii_grid]
 
     cx_s, cy_s = entry
     cx_e, cy_e = exit_pos
-    
+
     if cy_s * 2 + 1 < len(grid_copy):
         grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = 'S'
-        
+
     if cy_e * 2 + 1 < len(grid_copy):
         grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = 'E'
 
     if show_path:
         cx, cy = entry
         for move in path:
-            if move == 'N': char, nx, ny = '↑', cx, cy - 1
-            elif move == 'S': char, nx, ny = '↓', cx, cy + 1
-            elif move == 'E': char, nx, ny = '→', cx + 1, cy
-            elif move == 'W': char, nx, ny = '←', cx - 1, cy
+            char, nx, ny = '', cx, cy
+            if move == 'N':
+                char, nx, ny = '↑', cx, cy - 1
+            elif move == 'S':
+                char, nx, ny = '↓', cx, cy + 1
+            elif move == 'E':
+                char, nx, ny = '→', cx + 1, cy
+            elif move == 'W':
+                char, nx, ny = '←', cx - 1, cy
 
-            if cy * 2 + 1 < len(grid_copy) and grid_copy[cy * 2 + 1][cx * 4 + 2] not in ('S', 'E'):
-                grid_copy[cy * 2 + 1][cx * 4 + 2] = char
+            if cy * 2 + 1 < len(grid_copy):
+                if grid_copy[cy * 2 + 1][cx * 4 + 2] not in ('S', 'E'):
+                    grid_copy[cy * 2 + 1][cx * 4 + 2] = char
             cx, cy = nx, ny
 
     color_code: str = COLORS[wall_color]
     reset: str = COLORS["reset"]
-    
+
     lines_out: list[str] = []
 
     for y, row in enumerate(grid_copy):
         row_str: str = ""
         for x, char in enumerate(row):
-            is_entry_cell = (y % 2 != 0) and (x % 4 != 0) and ((y - 1) // 2 == entry[1]) and (x // 4 == entry[0])
-            is_exit_cell = (y % 2 != 0) and (x % 4 != 0) and ((y - 1) // 2 == exit_pos[1]) and (x // 4 == exit_pos[0])
+            is_entry_cell = (
+                (y % 2 != 0) and
+                (x % 4 != 0) and
+                ((y - 1) // 2 == entry[1]) and
+                (x // 4 == entry[0])
+            )
+            is_exit_cell = (
+                (y % 2 != 0) and
+                (x % 4 != 0) and
+                ((y - 1) // 2 == exit_pos[1]) and
+                (x // 4 == exit_pos[0])
+            )
 
             if is_entry_cell:
                 row_str += f"{COLORS['start']}{char}{reset}"
@@ -183,14 +222,32 @@ def get_rendered_lines(ascii_grid: list[list[str]],
             else:
                 row_str += char
         lines_out.append(row_str)
-        
+
     return lines_out
 
 
 def draw_screen(lines: list[str], menu_text: str) -> None:
-    """Draws the screen without flickering using ANSI cursor repositioning."""
-    sys.stdout.write('\033[H' + '\n'.join(lines) + '\n' + menu_text)
+    """Draws the screen cleanly using ANSI codes to prevent artifacts."""
+    sys.stdout.write('\033[H' + '\n'.join(lines) + '\n' + menu_text + '\033[J')
     sys.stdout.flush()
+
+
+def animate_maze(
+    ascii_grid: list[list[str]],
+    entry: tuple[int, int],
+    exit_pos: tuple[int, int],
+    color_name: str
+) -> None:
+    """Animates the maze generation line by line."""
+    os.system('cls' if os.name == 'nt' else 'clear')
+    for i in range(1, len(ascii_grid) + 1):
+        partial_grid = ascii_grid[:i]
+        lines = get_rendered_lines(
+            partial_grid, entry, exit_pos, "", False, color_name
+        )
+        sys.stdout.write('\033[H' + '\n'.join(lines) + '\n\033[J')
+        sys.stdout.flush()
+        time.sleep(0.04)
 
 
 def start_ui(output_file: str, generator: Any) -> None:
@@ -200,8 +257,11 @@ def start_ui(output_file: str, generator: Any) -> None:
 
     if os.name == 'nt':
         os.system('')
-    
-    os.system('cls' if os.name == 'nt' else 'clear')
+
+    hex_grid, entry, exit_pos, full_path = parse_maze_file(output_file)
+    ascii_grid = build_ascii_grid(hex_grid)
+
+    animate_maze(ascii_grid, entry, exit_pos, COLOR_NAMES[color_idx])
 
     menu_text = (
         "\n=== A-Maze-ing ===\n"
@@ -213,10 +273,11 @@ def start_ui(output_file: str, generator: Any) -> None:
     )
 
     while True:
-        hex_grid, entry, exit_pos, full_path = parse_maze_file(output_file)
-        ascii_grid = build_ascii_grid(hex_grid)
-
-        lines = get_rendered_lines(ascii_grid, entry, exit_pos, full_path if show_path else "", show_path, COLOR_NAMES[color_idx])
+        lines = get_rendered_lines(
+            ascii_grid, entry, exit_pos,
+            full_path if show_path else "",
+            show_path, COLOR_NAMES[color_idx]
+        )
         draw_screen(lines, menu_text)
 
         try:
@@ -225,38 +286,38 @@ def start_ui(output_file: str, generator: Any) -> None:
             print("\nExiting gracefully...")
             break
 
+        os.system('cls' if os.name == 'nt' else 'clear')
+
         if choice == '1':
             config = parser_config()
             new_gen = MazeGenerator(config)
             new_gen.generate()
             new_gen.save_to_file()
-            
-            hex_grid, entry, exit_pos, full_path = parse_maze_file(config.output_file)
+
+            hex_grid, entry, exit_pos, full_path = parse_maze_file(
+                config.output_file
+            )
             ascii_grid = build_ascii_grid(hex_grid)
             show_path = False
-            
-            os.system('cls' if os.name == 'nt' else 'clear')
-            for i in range(1, len(ascii_grid) + 1):
-                partial_grid = ascii_grid[:i]
-                lines = get_rendered_lines(partial_grid, entry, exit_pos, "", False, COLOR_NAMES[color_idx])
-                sys.stdout.write('\033[H' + '\n'.join(lines) + '\n')
-                sys.stdout.flush()
-                time.sleep(0.04) 
+
+            animate_maze(ascii_grid, entry, exit_pos, COLOR_NAMES[color_idx])
 
         elif choice == '2':
             show_path = not show_path
-            
+
             if show_path:
                 current_path = ""
                 for move in full_path:
                     current_path += move
-                    lines = get_rendered_lines(ascii_grid, entry, exit_pos, current_path, True, COLOR_NAMES[color_idx])
+                    lines = get_rendered_lines(
+                        ascii_grid, entry, exit_pos,
+                        current_path, True, COLOR_NAMES[color_idx]
+                    )
                     draw_screen(lines, menu_text)
-                    time.sleep(0.05) 
+                    time.sleep(0.05)
 
         elif choice == '3':
             color_idx = (color_idx + 1) % len(COLOR_NAMES)
 
         elif choice == '4':
-            os.system('cls' if os.name == 'nt' else 'clear')
             break
