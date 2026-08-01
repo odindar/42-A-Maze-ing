@@ -52,7 +52,7 @@ def parser_config() -> MazeConfig:
                 if not line or line.startswith("#"):
                     continue
 
-                out: str = line.split("=", 1)
+                out: list[str] = line.split("=", 1)
                 if len(out) != 2:
                     print(f"ERROR: Invalid line format -> {line}")
                     sys.exit(1)
@@ -80,7 +80,9 @@ def parser_config() -> MazeConfig:
                 elif key == "SEED":
                     seed = parse_int(val)
                 else:
-                    raise ValueError(f"ERROR: Unknown configuration key: '{key}'")
+                    raise ValueError(
+                        f"ERROR: Unknown configuration key: '{key}'"
+                    )
 
     except ValueError as e:
         print(f"{e}")
@@ -104,6 +106,7 @@ def parser_config() -> MazeConfig:
         is_perfect=is_perfect,
         seed=seed,
     )
+
 
 def is_valid_maze(maze: MazeConfig) -> bool:
     pattern_w: int = len(MazeConfig.PATTERN_42[0])

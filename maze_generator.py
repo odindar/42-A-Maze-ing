@@ -16,10 +16,14 @@ class MazeGenerator:
         self.config = config
 
         self.grid: list[list[int]] = [
-            [15 for _ in range(self.config.width)] for _ in range(self.config.height)
+            [
+                15 for _ in range(self.config.width)]
+            for _ in range(self.config.height)
         ]
         self.visited: list[list[bool]] = [
-            [False for _ in range(self.config.width)] for _ in range(self.config.height)
+            [
+                False for _ in range(self.config.width)]
+            for _ in range(self.config.height)
         ]
         self._place_42_pattern()
 
@@ -28,7 +32,10 @@ class MazeGenerator:
         pattern_h = len(pattern)
         pattern_w = len(pattern[0])
 
-        if self.config.width < pattern_w + 2 or self.config.height < pattern_h + 2:
+        if (
+            self.config.width < pattern_w + 2 or
+            self.config.height < pattern_h + 2
+        ):
             return
 
         start_y = self.config.height // 2 - (pattern_h // 2)
@@ -39,8 +46,10 @@ class MazeGenerator:
                 if pattern[y][x] == "1":
                     self.visited[start_y + y][start_x + x] = True
 
-    def _get_unvisited_neighbors(self, x: int, y: int) -> list[tuple[str, int, int]]:
-        neighbors: list[str, int, int] = []
+    def _get_unvisited_neighbors(
+        self, x: int, y: int
+    ) -> list[tuple[str, int, int]]:
+        neighbors: list[tuple[str, int, int]] = []
         for direction, (dy, dx, _, _) in DIRECTIONS.items():
             nx, ny = x + dx, y + dy
             if (
@@ -52,7 +61,7 @@ class MazeGenerator:
         return neighbors
 
     def generate(self) -> None:
-        if hasattr(self.config, "seed") and self.config.seed != None:
+        if hasattr(self.config, "seed") and not self.config.seed:
             random.seed(self.config.seed)
 
         start_x, start_y = self.config.entry
@@ -83,7 +92,10 @@ class MazeGenerator:
             return ""
 
         queue = deque([(entry[0], entry[1], "")])
-        self.visited = [[False for _ in range(self.config.width)] for _ in range(self.config.height)]
+        self.visited = [
+            [False for _ in range(self.config.width)]
+            for _ in range(self.config.height)
+        ]
         self.visited[entry[1]][entry[0]] = True
 
         while queue:
@@ -107,7 +119,7 @@ class MazeGenerator:
     def _make_imperfect(self) -> None:
         DEAD_END = {7, 11, 13, 14}
 
-        queue: deque = deque()
+        queue: deque[tuple[int, int]] = deque()
 
         for y in range(self.config.height):
             for x in range(self.config.width):
@@ -134,7 +146,7 @@ class MazeGenerator:
                 continue
 
             nx, ny, bc, bn = random.choice(candidates)
-            self.grid[y][x]   -= bc
+            self.grid[y][x] -= bc
             self.grid[ny][nx] -= bn
 
     def save_to_file(self) -> None:
