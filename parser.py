@@ -35,6 +35,8 @@ class MazeParser:
         is_perfect: bool | None = None
         seed: int | None = None
 
+        seen_keys: set[str] = set()
+
         try:
             with open(self.file_name, "r") as config_file:
                 output: list[str] = config_file.readlines()
@@ -45,10 +47,15 @@ class MazeParser:
 
                     out: list[str] = line.split("=", 1)
                     if len(out) != 2:
-                        raise ValueError(f"ERROR: Invalid line format -> {line}")
+                        raise ValueError("ERROR: Invalid line format")
 
                     key = out[0].strip().upper()
                     val = out[1].strip()
+
+                    if key in seen_keys:
+                        raise ValueError("ERROR: Duplicate configuration key")
+
+                    seen_keys.add(key)
 
                     if key == "WIDTH":
                         width = self._parse_int(val)
@@ -73,7 +80,7 @@ class MazeParser:
                     elif key == "SEED":
                         seed = self._parse_int(val)
                     else:
-                        raise ValueError(f"ERROR: Unknown configuration key: '{key}'")
+                        raise ValueError("ERROR: Unknown configuration key")
 
         except FileNotFoundError:
             raise FileNotFoundError(
@@ -120,15 +127,15 @@ class MazeParser:
             return False
 
         if maze.width >= pattern_w + 2 and maze.height >= pattern_h + 2:
-            start_x: int = maze.width // 2 - (pattern_w // 2)
-            start_y: int = maze.height // 2 - (pattern_h // 2)
+            strt_x: int = maze.width // 2 - (pattern_w // 2)
+            strt_y: int = maze.height // 2 - (pattern_h // 2)
             for px, py in (maze.entry, maze.exit):
                 if (
-                    start_x <= px < start_x + pattern_w
-                    and start_y <= py < start_y + pattern_h
-                    and MazeConfig.PATTERN_42[py - start_y][px - start_x] == "1"
+                    strt_x <= px < strt_x + pattern_w
+                    and strt_y <= py < strt_y + pattern_h
+                    and MazeConfig.PATTERN_42[py - strt_y][px - strt_x] == "1"
                 ):
-                    print("Error: ENTRY or EXIT coordinate on 42 pattern wall.")
+                    print("ERROR: ENTRY/EXIT coordinate on 42 pattern wall.")
                     return False
 
         return True
