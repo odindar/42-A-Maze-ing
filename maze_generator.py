@@ -63,8 +63,8 @@ class MazeGenerator:
 
         while stack:
             current_x, current_y = stack[-1]
-            neighbors: list[tuple[str, int, int]] = self._get_unvisited_neighbors(
-                current_x, current_y
+            neighbors: list[tuple[str, int, int]] = (
+                self._get_unvisited_neighbors(current_x, current_y)
             )
             if neighbors:
                 direction, next_x, next_y = random.choice(neighbors)
@@ -148,7 +148,7 @@ class MazeGenerator:
         try:
             with open(self.config.output_file, "w") as f:
                 for row in self.grid:
-                    hex_row = "".join(f"{cell:X}" for cell in row)
+                    hex_row: str = "".join(f"{cell:X}" for cell in row)
                     f.write(f"{hex_row}\n")
                 f.write("\n")
                 f.write(f"{self.config.entry[0]},{self.config.entry[1]}\n")

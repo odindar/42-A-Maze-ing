@@ -162,9 +162,13 @@ class MazeVisualizer:
                     up: bool = y > 0 and ascii_grid[y - 1][x] == "|"
                     down: bool = y < grid_h - 1 and ascii_grid[y + 1][x] == "|"
                     left: bool = x > 0 and ascii_grid[y][x - 1] == "-"
-                    right: bool = x < grid_w - 1 and ascii_grid[y][x + 1] == "-"
+                    right: bool = (
+                        x < grid_w - 1 and ascii_grid[y][x + 1] == "-"
+                    )
 
-                    state: tuple[bool, bool, bool, bool] = (up, down, left, right)
+                    state: tuple[bool, bool, bool, bool] = (
+                        up, down, left, right
+                    )
                     final_grid[y][x] = self.BOX_CHARS.get(state, " ")
                 else:
                     final_grid[y][x] = " "
@@ -275,9 +279,9 @@ class MazeVisualizer:
         show_path: bool = False
         color_idx: int = 0
 
-        parsed_data: tuple[list[str], tuple[int, int], tuple[int, int], str] = (
-            self.parse_maze_file(self.output_file)
-        )
+        parsed_data: (
+            tuple[list[str], tuple[int, int], tuple[int, int], str]
+        ) = self.parse_maze_file(self.output_file)
         hex_grid, entry, exit_pos, path = parsed_data
 
         ascii_grid: list[list[str]] = self.build_ascii_grid(hex_grid)
@@ -327,7 +331,9 @@ class MazeVisualizer:
 
                 if choice == "1":
                     self.set_echo(False)
-                    new_gen: MazeGenerator = MazeGenerator(self.generator.config)
+                    new_gen: MazeGenerator = MazeGenerator(
+                        self.generator.config
+                    )
                     new_gen.generate()
                     new_gen.save_to_file()
 
