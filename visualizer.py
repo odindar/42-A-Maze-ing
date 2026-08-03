@@ -86,17 +86,17 @@ class MazeVisualizer:
         """Reads the hex maze file, returns ASCII grid and footer data."""
         try:
             with open(filepath, "r", encoding="utf-8") as f:
-                content = f.read().strip()
+                content: str = f.read().strip()
         except FileNotFoundError:
             print(f"Error: Maze output file '{filepath}' not found.")
             sys.exit(1)
 
-        parts = content.replace("\r", "").split("\n\n")
+        parts: list[str] = content.replace("\r", "").split("\n\n")
         if len(parts) < 2:
             print(f"Error: Invalid maze file format in '{filepath}'.")
             sys.exit(1)
-        hex_grid = parts[0].splitlines()
-        footer_lines = parts[1].splitlines()
+        hex_grid: list[str] = parts[0].splitlines()
+        footer_lines: list[str] = parts[1].splitlines()
 
         try:
             entry_x, entry_y = map(
@@ -105,7 +105,7 @@ class MazeVisualizer:
             exit_x, exit_y = map(
                 int, footer_lines[1].split("#")[0].strip().split(",")
             )
-            path = footer_lines[2] if len(footer_lines) > 2 else ""
+            path: str = footer_lines[2] if len(footer_lines) > 2 else ""
         except (IndexError, ValueError) as e:
             print(f"Error parsing maze footer data: {e}")
             sys.exit(1)
@@ -120,7 +120,9 @@ class MazeVisualizer:
         grid_h: int = height * 2 + 1
         grid_w: int = width * 4 + 1
 
-        ascii_grid = [[" " for _ in range(grid_w)] for _ in range(grid_h)]
+        ascii_grid: list[list[str]] = [
+            [" " for _ in range(grid_w)] for _ in range(grid_h)
+        ]
 
         for y in range(height + 1):
             for x in range(width + 1):
@@ -144,10 +146,12 @@ class MazeVisualizer:
                     for i in range(1, 4):
                         ascii_grid[y * 2 + 1][x * 4 + i] = "#"
 
-        final_grid = [[" " for _ in range(grid_w)] for _ in range(grid_h)]
+        final_grid: list[list[str]] = [
+            [" " for _ in range(grid_w)] for _ in range(grid_h)
+        ]
         for y in range(grid_h):
             for x in range(grid_w):
-                char = ascii_grid[y][x]
+                char: str = ascii_grid[y][x]
                 if char == "-":
                     final_grid[y][x] = "━"
                 elif char == "|":
@@ -155,12 +159,12 @@ class MazeVisualizer:
                 elif char == "#":
                     final_grid[y][x] = "▓"
                 elif char == "+":
-                    up = y > 0 and ascii_grid[y - 1][x] == "|"
-                    down = y < grid_h - 1 and ascii_grid[y + 1][x] == "|"
-                    left = x > 0 and ascii_grid[y][x - 1] == "-"
-                    right = x < grid_w - 1 and ascii_grid[y][x + 1] == "-"
+                    up: bool = y > 0 and ascii_grid[y - 1][x] == "|"
+                    down: bool = y < grid_h - 1 and ascii_grid[y + 1][x] == "|"
+                    left: bool = x > 0 and ascii_grid[y][x - 1] == "-"
+                    right: bool = x < grid_w - 1 and ascii_grid[y][x + 1] == "-"
 
-                    state = (up, down, left, right)
+                    state: tuple[bool, bool, bool, bool] = (up, down, left, right)
                     final_grid[y][x] = self.BOX_CHARS.get(state, " ")
                 else:
                     final_grid[y][x] = " "
@@ -181,9 +185,9 @@ class MazeVisualizer:
 
     def _render_row(self, row: list[str], wall_color: str) -> str:
         """Applies ANSI colors to a single grid row."""
-        row_str = ""
-        color_code = self.COLORS[wall_color]
-        reset = self.COLORS["reset"]
+        row_str: str = ""
+        color_code: str = self.COLORS[wall_color]
+        reset: str = self.COLORS["reset"]
 
         for char in row:
             if char == "S":
@@ -211,7 +215,7 @@ class MazeVisualizer:
         wall_color: str,
     ) -> list[str]:
         """Returns colored grid lines with the path applied if requested."""
-        grid_copy = [row[:] for row in ascii_grid]
+        grid_copy: list[list[str]] = [row[:] for row in ascii_grid]
 
         cx_s, cy_s = entry
         cx_e, cy_e = exit_pos
@@ -271,10 +275,12 @@ class MazeVisualizer:
         show_path: bool = False
         color_idx: int = 0
 
-        parsed_data = self.parse_maze_file(self.output_file)
+        parsed_data: tuple[list[str], tuple[int, int], tuple[int, int], str] = (
+            self.parse_maze_file(self.output_file)
+        )
         hex_grid, entry, exit_pos, path = parsed_data
 
-        ascii_grid = self.build_ascii_grid(hex_grid)
+        ascii_grid: list[list[str]] = self.build_ascii_grid(hex_grid)
 
         grid_h: int = len(ascii_grid)
         grid_w: int = len(ascii_grid[0]) if grid_h > 0 else 0
@@ -288,7 +294,7 @@ class MazeVisualizer:
                 ascii_grid, entry, exit_pos, self.COLOR_NAMES[color_idx]
             )
 
-            menu_text = (
+            menu_text: str = (
                 "\n=== A-Maze-ing ===\n"
                 "1. Re-generate a new maze\n"
                 "2. Show/Hide the shortest path\n"
@@ -312,7 +318,7 @@ class MazeVisualizer:
                 self.set_echo(True)
 
                 try:
-                    choice = input().strip()
+                    choice: str = input().strip()
                 except KeyboardInterrupt:
                     print("\nExiting gracefully...")
                     break
@@ -321,7 +327,7 @@ class MazeVisualizer:
 
                 if choice == "1":
                     self.set_echo(False)
-                    new_gen = MazeGenerator(self.generator.config)
+                    new_gen: MazeGenerator = MazeGenerator(self.generator.config)
                     new_gen.generate()
                     new_gen.save_to_file()
 
@@ -350,10 +356,12 @@ class MazeVisualizer:
                         )
                         self.draw_screen(lines, menu_text)
 
-                        p_color = self.COLORS["path"]
-                        reset = self.COLORS["reset"]
+                        p_color: str = self.COLORS["path"]
+                        reset: str = self.COLORS["reset"]
 
-                        iter_pth = self._iter_path(entry, path)
+                        iter_pth: Iterator[tuple[int, int, int, int, str]] = (
+                            self._iter_path(entry, path)
+                        )
                         for tx, ty, gx, gy, char in iter_pth:
                             if (gx, gy) not in (entry, exit_pos):
                                 print(

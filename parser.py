@@ -45,8 +45,8 @@ class MazeParser:
                     if len(out) != 2:
                         raise ValueError("ERROR: Invalid line format")
 
-                    key = out[0].strip().upper()
-                    val = out[1].strip()
+                    key: str = out[0].strip().upper()
+                    val: str = out[1].strip()
 
                     if key in seen_keys:
                         raise ValueError("ERROR: Duplicate configuration key")
@@ -106,7 +106,6 @@ class MazeParser:
     def is_valid_maze(self, maze: MazeConfig) -> bool:
         pattern_w: int = len(MazeConfig.PATTERN_42[0])
         pattern_h: int = len(MazeConfig.PATTERN_42)
-
         if maze.width < pattern_w + 2 or maze.height < pattern_h + 2:
             print("ERROR: Maze is too small for display 42 pattern.")
             input("Press Enter to continue...")

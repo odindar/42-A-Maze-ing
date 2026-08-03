@@ -112,7 +112,7 @@ class Maze:
         """Parse *path*. Raise :class:`MazeError` on a malformed grid."""
         grid: List[List[int]] = []
         footer: List[str] = []
-        reading_grid = True
+        reading_grid: bool = True
         with open(path, encoding="utf-8", errors="replace") as stream:
             for number, raw in enumerate(stream, start=1):
                 line = raw.rstrip("\n\r")
@@ -132,7 +132,7 @@ class Maze:
 
     @staticmethod
     def _parse_row(text: str, number: int, grid: List[List[int]]) -> List[int]:
-        row = []
+        row: List[int] = []
         for column, char in enumerate(text, start=1):
             if char not in HEX_DIGITS:
                 raise MazeError(
@@ -192,8 +192,8 @@ class Maze:
 
     def region_of(self, start: Cell) -> FrozenSet[Cell]:
         """Breadth-first set of cells reachable from *start*."""
-        seen = {start}
-        queue = deque([start])
+        seen: Set[Cell] = {start}
+        queue: deque[Cell] = deque([start])
         while queue:
             for nxt in self.passages(queue.popleft()):
                 if nxt not in seen:
@@ -208,7 +208,7 @@ class Maze:
         for cell in self:
             if cell in seen:
                 continue
-            component = self.region_of(cell)
+            component: FrozenSet[Cell] = self.region_of(cell)
             seen |= component
             if len(component) > len(best):
                 best = component
@@ -307,7 +307,8 @@ class MazeReport:
         normal cell; it is *enclosed* - and tolerated - when every closed wall
         faces a fully closed "42" cell or the outer border.
         """
-        real = enclosed = 0
+        real: int = 0
+        enclosed: int = 0
         for cell in self.region:
             if sum(1 for _ in self.maze.passages(cell)) != 1:
                 continue
@@ -334,9 +335,9 @@ class MazeReport:
         four) cells surrounding the middle is accepted as the start.
         """
         rows, cols = self.maze.rows, self.maze.cols
-        corners = {(0, 0), (0, cols - 1), (rows - 1, 0), (rows - 1, cols - 1)}
-        missing = {cell for cell in corners if cell not in self.region}
-        centre_candidates = self._centre_candidates()
+        corners: Set[Cell] = {(0, 0), (0, cols - 1), (rows - 1, 0), (rows - 1, cols - 1)}
+        missing: Set[Cell] = {cell for cell in corners if cell not in self.region}
+        centre_candidates: FrozenSet[Cell] = self._centre_candidates()
         if not any(cell in self.region for cell in centre_candidates):
             missing |= centre_candidates
         return tuple(sorted(missing))
@@ -344,8 +345,8 @@ class MazeReport:
     def _centre_candidates(self) -> FrozenSet[Cell]:
         """The cell(s) around the middle, accounting for even dimensions."""
         rows, cols = self.maze.rows, self.maze.cols
-        row_mid = {rows // 2} if rows % 2 else {rows // 2 - 1, rows // 2}
-        col_mid = {cols // 2} if cols % 2 else {cols // 2 - 1, cols // 2}
+        row_mid: Set[int] = {rows // 2} if rows % 2 else {rows // 2 - 1, rows // 2}
+        col_mid: Set[int] = {cols // 2} if cols % 2 else {cols // 2 - 1, cols // 2}
         return frozenset((r, c) for r in row_mid for c in col_mid)
 
 
@@ -417,7 +418,7 @@ def verdict(report: MazeReport, min_loops: int, max_dead_ends: int) -> str:
             f"Not Pac-Man-ready: {real_dead_ends} real dead-ends (at most "
             f"{max_dead_ends} tolerated) - too many traps for a chased player."
         )
-    extra = (
+    extra: str = (
         "no real dead-end -> bonus-grade (perfectly braided)"
         if real_dead_ends == 0 else
         f"{real_dead_ends} real dead-end(s) within tolerance "
@@ -431,9 +432,9 @@ def verdict(report: MazeReport, min_loops: int, max_dead_ends: int) -> str:
 
 def render(report: MazeReport, min_loops: int, max_dead_ends: int) -> str:
     """Build the full human-readable report."""
-    maze = report.maze
+    maze: Maze = report.maze
     real, enclosed = report.dead_ends
-    lines = [
+    lines: List[str] = [
         f"Maze size        : {maze.cols} x {maze.rows} "
         f"({maze.rows * maze.cols} cells)",
         f"Entry            : {_xy(report.entry)}   Exit: {_exit(report)}",
@@ -467,7 +468,7 @@ def _exit(report: MazeReport) -> str:
     states: Dict[Optional[bool], str] = {
         True: " (reachable)", False: " (UNREACHABLE)",
     }
-    state = states.get(report.exit_reachable, "")
+    state: str = states.get(report.exit_reachable, "")
     return f"{_xy(report.maze.exit)}{state}"
 
 
@@ -480,8 +481,8 @@ def _key_cells(cells: Tuple[Cell, ...]) -> str:
 def _coherence(cells: Tuple[Cell, ...]) -> str:
     if not cells:
         return "OK (all shared walls match)"
-    shown = ", ".join(_xy(cell) for cell in cells[:5])
-    extra = "" if len(cells) <= 5 else f", ... (+{len(cells) - 5} more)"
+    shown: str = ", ".join(_xy(cell) for cell in cells[:5])
+    extra: str = "" if len(cells) <= 5 else f", ... (+{len(cells) - 5} more)"
     return f"{len(cells)} mismatching cell(s) -> {shown}{extra}"
 
 
@@ -510,9 +511,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
 def main(argv: List[str]) -> int:
     """Read, analyze and report; return the process exit code."""
-    args = parse_args(argv)
+    args: argparse.Namespace = parse_args(argv)
     try:
-        maze = Maze.from_file(args.output_file)
+        maze: Maze = Maze.from_file(args.output_file)
     except FileNotFoundError:
         print(f"Error: file not found: {args.output_file}")
         return EXIT_MALFORMED

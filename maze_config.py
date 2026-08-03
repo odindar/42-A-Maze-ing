@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 from typing import ClassVar
 
-DIRECTIONS = {
+DIRECTIONS: dict[str, tuple[int, int, int, int]] = {
     "N": (-1, 0, 1, 4),
     "E": (0, 1, 2, 8),
     "S": (1, 0, 4, 1),

@@ -21,9 +21,9 @@ class MazeGenerator:
         self._place_42_pattern()
 
     def _place_42_pattern(self) -> None:
-        pattern = MazeConfig.PATTERN_42
-        pattern_h = len(pattern)
-        pattern_w = len(pattern[0])
+        pattern: tuple[str, ...] = MazeConfig.PATTERN_42
+        pattern_h: int = len(pattern)
+        pattern_w: int = len(pattern[0])
 
         if (
             self.config.width < pattern_w + 2 or
@@ -31,8 +31,8 @@ class MazeGenerator:
         ):
             return
 
-        start_y = self.config.height // 2 - (pattern_h // 2)
-        start_x = self.config.width // 2 - (pattern_w // 2)
+        start_y: int = self.config.height // 2 - (pattern_h // 2)
+        start_x: int = self.config.width // 2 - (pattern_w // 2)
 
         for y in range(pattern_h):
             for x in range(pattern_w):
@@ -63,7 +63,9 @@ class MazeGenerator:
 
         while stack:
             current_x, current_y = stack[-1]
-            neighbors = self._get_unvisited_neighbors(current_x, current_y)
+            neighbors: list[tuple[str, int, int]] = self._get_unvisited_neighbors(
+                current_x, current_y
+            )
             if neighbors:
                 direction, next_x, next_y = random.choice(neighbors)
                 _, _, bit_current, bit_next = DIRECTIONS[direction]
@@ -110,7 +112,7 @@ class MazeGenerator:
         return ""
 
     def _make_imperfect(self) -> None:
-        DEAD_END = {7, 11, 13, 14}
+        DEAD_END: set[int] = {7, 11, 13, 14}
 
         queue: deque[tuple[int, int]] = deque()
 
