@@ -6,12 +6,10 @@ class MazeParser:
         self.file_name = file_name
 
     def _parse_int(self, line: str) -> int:
-        value: int = 0
         try:
-            value = int(line)
+            return int(line)
         except ValueError:
             raise ValueError("ERROR: Invalid integer value")
-        return value
 
     def _parse_tuple(self, val: str) -> tuple[int, int]:
         tuple_prts: list[str] = val.split(",")
@@ -20,11 +18,9 @@ class MazeParser:
             raise ValueError("ERROR: Invalid tuple format")
 
         try:
-            value = (int(tuple_prts[0]), int(tuple_prts[1]))
+            return (int(tuple_prts[0]), int(tuple_prts[1]))
         except ValueError:
             raise ValueError("ERROR: Invalid integer value")
-
-        return value
 
     def parse_config(self) -> MazeConfig:
         width: int = 0
@@ -113,6 +109,7 @@ class MazeParser:
 
         if maze.width < pattern_w + 2 or maze.height < pattern_h + 2:
             print("ERROR: Maze is too small for display 42 pattern.")
+            input("Press Enter to continue...")
 
         if not (
             0 < maze.width

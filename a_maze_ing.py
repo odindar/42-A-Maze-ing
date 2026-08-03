@@ -22,9 +22,13 @@ if __name__ == "__main__":
     if parser.is_valid_maze(config):
         generator: MazeGenerator = MazeGenerator(config)
         generator.generate()
-        generator.save_to_file()
         try:
-            visualizer = MazeVisualizer("maze.txt", generator)
+            generator.save_to_file()
+        except RuntimeError as e:
+            print(f"{e}")
+            sys.exit(1)
+        try:
+            visualizer = MazeVisualizer(config.output_file, generator)
             visualizer.run_ui()
         except (ValueError, FileNotFoundError) as e:
             print(f"{e}")

@@ -54,7 +54,7 @@ class MazeGenerator:
         return neighbors
 
     def generate(self) -> None:
-        if hasattr(self.config, "seed") and not self.config.seed:
+        if self.config.seed is not None:
             random.seed(self.config.seed)
 
         start_x, start_y = self.config.entry
@@ -154,4 +154,4 @@ class MazeGenerator:
                 path: str = self._solve_maze()
                 f.write(f"{path}\n")
         except Exception as e:
-            print(f"Error writing to output file: {e}")
+            raise RuntimeError(f"Error writing to output file: {e}")

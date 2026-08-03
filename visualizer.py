@@ -56,7 +56,9 @@ class MazeVisualizer:
         (False, False, False, False): " ",
     }
 
-    DIR_CHARS: ClassVar[dict[str, str]] = {"N": "▲", "S": "▼", "E": "▶", "W": "◀"}
+    DIR_CHARS: ClassVar[dict[str, str]] = {
+        "N": "▲", "S": "▼", "E": "▶", "W": "◀"
+    }
 
     def __init__(self, output_file: str, generator: Any):
         self.output_file = output_file
@@ -90,6 +92,9 @@ class MazeVisualizer:
             sys.exit(1)
 
         parts = content.replace("\r", "").split("\n\n")
+        if len(parts) < 2:
+            print(f"Error: Invalid maze file format in '{filepath}'.")
+            sys.exit(1)
         hex_grid = parts[0].splitlines()
         footer_lines = parts[1].splitlines()
 
@@ -164,12 +169,12 @@ class MazeVisualizer:
 
     def _iter_path(
         self, entry: tuple[int, int], path: str
-    ) -> Iterator[tuple[int, int, str]]:
-        """Yields terminal coordinates and arrow chars for the shortest path."""
+    ) -> Iterator[tuple[int, int, int, int, str]]:
+        """Yields coordinates and arrow chars for the shortest path."""
         cx, cy = entry
         for move in path:
             char = self.DIR_CHARS.get(move, "")
-            yield cx * 4 + 2, cy * 2 + 1, char
+            yield cx * 4 + 2, cy * 2 + 1, cx, cy, char
             dy, dx, _, _ = DIRECTIONS[move]
             cx += dx
             cy += dy
@@ -182,9 +187,9 @@ class MazeVisualizer:
 
         for char in row:
             if char == "S":
-                row_str += f"{self.COLORS['start']}▓{reset}"
+                row_str += f"{self.COLORS['start']}S{reset}"
             elif char == "E":
-                row_str += f"{self.COLORS['end']}▓{reset}"
+                row_str += f"{self.COLORS['end']}E{reset}"
             elif char == "▓":
                 row_str += f"{self.COLORS['pattern_42']}▓{reset}"
             elif char in self.DIR_CHARS.values():
@@ -217,7 +222,7 @@ class MazeVisualizer:
             grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
 
         if show_path:
-            for tx, ty, char in self._iter_path(entry, path):
+            for tx, ty, _, _, char in self._iter_path(entry, path):
                 if ty < len(grid_copy) and grid_copy[ty][tx] not in ("S", "E"):
                     grid_copy[ty][tx] = char
 
@@ -267,7 +272,7 @@ class MazeVisualizer:
         color_idx: int = 0
 
         parsed_data = self.parse_maze_file(self.output_file)
-        hex_grid, entry, exit_pos, full_path = parsed_data
+        hex_grid, entry, exit_pos, path = parsed_data
 
         ascii_grid = self.build_ascii_grid(hex_grid)
 
@@ -277,93 +282,92 @@ class MazeVisualizer:
         if not self.check_terminal_size(grid_w, grid_h):
             return
 
-        self.set_echo(False)
-        self.animate_maze(
-            ascii_grid, entry, exit_pos, self.COLOR_NAMES[color_idx]
-        )
-
-        menu_text = (
-            "\n=== A-Maze-ing ===\n"
-            "1. Re-generate a new maze\n"
-            "2. Show/Hide the shortest path\n"
-            "3. Change wall colours\n"
-            "4. Quit\n"
-            "Choice? (1-4): "
-        )
-
-        while True:
-            lines = self.get_rendered_lines(
-                ascii_grid,
-                entry,
-                exit_pos,
-                full_path if show_path else "",
-                show_path,
-                self.COLOR_NAMES[color_idx],
+        try:
+            self.set_echo(False)
+            self.animate_maze(
+                ascii_grid, entry, exit_pos, self.COLOR_NAMES[color_idx]
             )
-            self.draw_screen(lines, menu_text)
 
-            self._flush_input()
-            self.set_echo(True)
+            menu_text = (
+                "\n=== A-Maze-ing ===\n"
+                "1. Re-generate a new maze\n"
+                "2. Show/Hide the shortest path\n"
+                "3. Change wall colours\n"
+                "4. Quit\n"
+                "Choice? (1-4): "
+            )
 
-            try:
-                choice = input().strip()
-            except KeyboardInterrupt:
-                print("\nExiting gracefully...")
-                break
-
-            print(self.COLORS["clear_home"], end="", flush=True)
-
-            if choice == "1":
-                self.set_echo(False)
-                new_gen = MazeGenerator(self.generator.config)
-                new_gen.generate()
-                new_gen.save_to_file()
-
-                parsed_data = self.parse_maze_file(
-                    self.generator.config.output_file
+            while True:
+                lines = self.get_rendered_lines(
+                    ascii_grid,
+                    entry,
+                    exit_pos,
+                    path if show_path else "",
+                    show_path,
+                    self.COLOR_NAMES[color_idx],
                 )
-                hex_grid, entry, exit_pos, full_path = parsed_data
+                self.draw_screen(lines, menu_text)
 
-                ascii_grid = self.build_ascii_grid(hex_grid)
-                show_path = False
+                self._flush_input()
+                self.set_echo(True)
 
-                self.animate_maze(
-                    ascii_grid, entry, exit_pos, self.COLOR_NAMES[color_idx]
-                )
+                try:
+                    choice = input().strip()
+                except KeyboardInterrupt:
+                    print("\nExiting gracefully...")
+                    break
 
-            elif choice == "2":
-                show_path = not show_path
-                if show_path:
+                print(self.COLORS["clear_home"], end="", flush=True)
+
+                if choice == "1":
                     self.set_echo(False)
-                    lines = self.get_rendered_lines(
-                        ascii_grid,
-                        entry,
-                        exit_pos,
-                        "",
-                        False,
-                        self.COLOR_NAMES[color_idx],
+                    new_gen = MazeGenerator(self.generator.config)
+                    new_gen.generate()
+                    new_gen.save_to_file()
+
+                    parsed_data = self.parse_maze_file(self.output_file)
+                    hex_grid, entry, exit_pos, path = parsed_data
+
+                    ascii_grid = self.build_ascii_grid(hex_grid)
+                    show_path = False
+
+                    self.animate_maze(
+                        ascii_grid, entry, exit_pos,
+                        self.COLOR_NAMES[color_idx]
                     )
-                    self.draw_screen(lines, menu_text)
 
-                    p_color = self.COLORS["path"]
-                    reset = self.COLORS["reset"]
+                elif choice == "2":
+                    show_path = not show_path
+                    if show_path:
+                        self.set_echo(False)
+                        lines = self.get_rendered_lines(
+                            ascii_grid,
+                            entry,
+                            exit_pos,
+                            "",
+                            False,
+                            self.COLOR_NAMES[color_idx],
+                        )
+                        self.draw_screen(lines, menu_text)
 
-                    for tx, ty, char in self._iter_path(entry, full_path):
-                        term_row = ty + 1
-                        term_col = tx + 1
+                        p_color = self.COLORS["path"]
+                        reset = self.COLORS["reset"]
 
-                        current_grid_coords = ((tx - 2) // 4, (ty - 1) // 2)
-                        if current_grid_coords not in (entry, exit_pos):
-                            print(
-                                f"\033[{term_row};{term_col}H"
-                                f"\033[1m{p_color}{char}{reset}",
-                                end="",
-                                flush=True,
-                            )
-                            time.sleep(0.09)
+                        iter_pth = self._iter_path(entry, path)
+                        for tx, ty, gx, gy, char in iter_pth:
+                            if (gx, gy) not in (entry, exit_pos):
+                                print(
+                                    f"\033[{ty + 1};{tx + 1}H"
+                                    f"\033[1m{p_color}{char}{reset}",
+                                    end="",
+                                    flush=True,
+                                )
+                                time.sleep(0.09)
 
-            elif choice == "3":
-                color_idx = (color_idx + 1) % len(self.COLOR_NAMES)
+                elif choice == "3":
+                    color_idx = (color_idx + 1) % len(self.COLOR_NAMES)
 
-            elif choice == "4":
-                break
+                elif choice == "4":
+                    break
+        finally:
+            self.set_echo(True)
