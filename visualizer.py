@@ -99,12 +99,8 @@ class MazeVisualizer:
         footer_lines: list[str] = parts[1].splitlines()
 
         try:
-            entry_x, entry_y = map(
-                int, footer_lines[0].split("#")[0].strip().split(",")
-            )
-            exit_x, exit_y = map(
-                int, footer_lines[1].split("#")[0].strip().split(",")
-            )
+            entry_x, entry_y = map(int, footer_lines[0].split(","))
+            exit_x, exit_y = map(int, footer_lines[1].split(","))
             path: str = footer_lines[2] if len(footer_lines) > 2 else ""
         except (IndexError, ValueError) as e:
             print(f"Error parsing maze footer data: {e}")
