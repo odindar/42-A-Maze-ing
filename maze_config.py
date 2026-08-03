@@ -4,6 +4,13 @@
 from dataclasses import dataclass
 from typing import ClassVar
 
+DIRECTIONS = {
+    "N": (-1, 0, 1, 4),
+    "E": (0, 1, 2, 8),
+    "S": (1, 0, 4, 1),
+    "W": (0, -1, 8, 2),
+}
+
 
 @dataclass
 class MazeConfig:

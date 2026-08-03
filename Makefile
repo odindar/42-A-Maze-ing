@@ -21,7 +21,7 @@ clean:
 	rm -rf */__pycache__
 
 fclean: clean
-	rm -f maze.txt output_maze.txt
+	rm -f maze.txt
 
 re: fclean all
 

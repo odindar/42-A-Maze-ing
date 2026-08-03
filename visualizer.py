@@ -7,14 +7,19 @@ import shutil
 import sys
 import termios
 import time
+from collections.abc import Iterator
 from typing import Any, ClassVar
 
+from maze_config import DIRECTIONS
 from maze_generator import MazeGenerator
 
 
 class MazeVisualizer:
     COLORS: ClassVar[dict[str, str]] = {
         "reset": "\033[0m",
+        "clear_home": "\033[2J\033[H",
+        "hide_cursor": "\033[?25l",
+        "show_cursor": "\033[?25h",
         "indigo": "\033[38;2;167;139;250m",
         "navy": "\033[38;2;96;165;250m",
         "khaki": "\033[38;2;253;224;71m",
@@ -32,30 +37,51 @@ class MazeVisualizer:
         "anthracite",
     ]
 
-    WALL_CHARS: str = "╋┫┣┻┳┃━┗┛┏┓╹╻╸╺"
+    BOX_CHARS: ClassVar[dict[tuple[bool, bool, bool, bool], str]] = {
+        (True, True, True, True): "╋",
+        (True, True, True, False): "┫",
+        (True, True, False, True): "┣",
+        (False, False, True, True): "━",
+        (True, True, False, False): "┃",
+        (True, False, True, True): "┻",
+        (False, True, True, True): "┳",
+        (True, False, False, True): "┗",
+        (True, False, True, False): "┛",
+        (False, True, False, True): "┏",
+        (False, True, True, False): "┓",
+        (True, False, False, False): "╹",
+        (False, True, False, False): "╻",
+        (False, False, True, False): "╸",
+        (False, False, False, True): "╺",
+        (False, False, False, False): " ",
+    }
+
+    DIR_CHARS: ClassVar[dict[str, str]] = {"N": "▲", "S": "▼", "E": "▶", "W": "◀"}
 
     def __init__(self, output_file: str, generator: Any):
         self.output_file = output_file
         self.generator = generator
 
     def set_echo(self, enable: bool) -> None:
-        """Turn on/off echo."""
+        """Manage terminal cursor visibility and echo modes."""
         fd = sys.stdin.fileno()
         attr = termios.tcgetattr(fd)
         if enable:
             attr[3] |= termios.ECHO
+            print(self.COLORS["show_cursor"], end="", flush=True)
         else:
             attr[3] &= ~termios.ECHO
+            print(self.COLORS["hide_cursor"], end="", flush=True)
         termios.tcsetattr(fd, termios.TCSANOW, attr)
 
     def _flush_input(self) -> None:
-        """Clear buffer."""
+        """Clear keyboard buffer."""
         termios.tcflush(sys.stdin, termios.TCIFLUSH)
 
     def parse_maze_file(
         self, filepath: str
     ) -> tuple[list[str], tuple[int, int], tuple[int, int], str]:
-        """Reads the generated hexadecimal maze output file."""
+        """Reads the hex maze file, returns ASCII grid and footer data."""
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read().strip()
@@ -64,23 +90,22 @@ class MazeVisualizer:
             sys.exit(1)
 
         parts = content.replace("\r", "").split("\n\n")
-
         hex_grid = parts[0].splitlines()
         footer_lines = parts[1].splitlines()
 
         try:
-            raw_entry = footer_lines[0].split("#")[0].strip().split(",")
-            ex, ey = map(int, raw_entry)
-
-            raw_exit = footer_lines[1].split("#")[0].strip().split(",")
-            exx, exy = map(int, raw_exit)
-
+            entry_x, entry_y = map(
+                int, footer_lines[0].split("#")[0].strip().split(",")
+            )
+            exit_x, exit_y = map(
+                int, footer_lines[1].split("#")[0].strip().split(",")
+            )
             path = footer_lines[2] if len(footer_lines) > 2 else ""
         except (IndexError, ValueError) as e:
             print(f"Error parsing maze footer data: {e}")
             sys.exit(1)
 
-        return hex_grid, (ex, ey), (exx, exy), path
+        return hex_grid, (entry_x, entry_y), (exit_x, exit_y), path
 
     def build_ascii_grid(self, hex_grid: list[str]) -> list[list[str]]:
         """Converts the hexadecimal grid into an ASCII box-drawing matrix."""
@@ -130,42 +155,46 @@ class MazeVisualizer:
                     left = x > 0 and ascii_grid[y][x - 1] == "-"
                     right = x < grid_w - 1 and ascii_grid[y][x + 1] == "-"
 
-                    if up and down and left and right:
-                        final_grid[y][x] = "╋"
-                    elif up and down and left:
-                        final_grid[y][x] = "┫"
-                    elif up and down and right:
-                        final_grid[y][x] = "┣"
-                    elif left and right and up:
-                        final_grid[y][x] = "┻"
-                    elif left and right and down:
-                        final_grid[y][x] = "┳"
-                    elif up and down:
-                        final_grid[y][x] = "┃"
-                    elif left and right:
-                        final_grid[y][x] = "━"
-                    elif up and right:
-                        final_grid[y][x] = "┗"
-                    elif up and left:
-                        final_grid[y][x] = "┛"
-                    elif down and right:
-                        final_grid[y][x] = "┏"
-                    elif down and left:
-                        final_grid[y][x] = "┓"
-                    elif up:
-                        final_grid[y][x] = "╹"
-                    elif down:
-                        final_grid[y][x] = "╻"
-                    elif left:
-                        final_grid[y][x] = "╸"
-                    elif right:
-                        final_grid[y][x] = "╺"
-                    else:
-                        final_grid[y][x] = " "
+                    state = (up, down, left, right)
+                    final_grid[y][x] = self.BOX_CHARS.get(state, " ")
                 else:
                     final_grid[y][x] = " "
 
         return final_grid
+
+    def _iter_path(
+        self, entry: tuple[int, int], path: str
+    ) -> Iterator[tuple[int, int, str]]:
+        """Yields terminal coordinates and arrow chars for the shortest path."""
+        cx, cy = entry
+        for move in path:
+            char = self.DIR_CHARS.get(move, "")
+            yield cx * 4 + 2, cy * 2 + 1, char
+            dy, dx, _, _ = DIRECTIONS[move]
+            cx += dx
+            cy += dy
+
+    def _render_row(self, row: list[str], wall_color: str) -> str:
+        """Applies ANSI colors to a single grid row."""
+        row_str = ""
+        color_code = self.COLORS[wall_color]
+        reset = self.COLORS["reset"]
+
+        for char in row:
+            if char == "S":
+                row_str += f"{self.COLORS['start']}▓{reset}"
+            elif char == "E":
+                row_str += f"{self.COLORS['end']}▓{reset}"
+            elif char == "▓":
+                row_str += f"{self.COLORS['pattern_42']}▓{reset}"
+            elif char in self.DIR_CHARS.values():
+                p_color = self.COLORS["path"]
+                row_str += f"\033[1m{p_color}{char}{reset}"
+            elif char != " ":
+                row_str += f"{color_code}{char}{reset}"
+            else:
+                row_str += char
+        return row_str
 
     def get_rendered_lines(
         self,
@@ -176,7 +205,7 @@ class MazeVisualizer:
         show_path: bool,
         wall_color: str,
     ) -> list[str]:
-        """Applies colors and path arrows, returning grid."""
+        """Returns colored grid lines with the path applied if requested."""
         grid_copy = [row[:] for row in ascii_grid]
 
         cx_s, cy_s = entry
@@ -184,53 +213,15 @@ class MazeVisualizer:
 
         if cy_s * 2 + 1 < len(grid_copy):
             grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
-
         if cy_e * 2 + 1 < len(grid_copy):
             grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
 
         if show_path:
-            cx, cy = entry
-            for move in path:
-                char, nx, ny = "", cx, cy
-                if move == "N":
-                    char, nx, ny = "▲", cx, cy - 1
-                elif move == "S":
-                    char, nx, ny = "▼", cx, cy + 1
-                elif move == "E":
-                    char, nx, ny = "▶", cx + 1, cy
-                elif move == "W":
-                    char, nx, ny = "◀", cx - 1, cy
+            for tx, ty, char in self._iter_path(entry, path):
+                if ty < len(grid_copy) and grid_copy[ty][tx] not in ("S", "E"):
+                    grid_copy[ty][tx] = char
 
-                if cy * 2 + 1 < len(grid_copy) and grid_copy[cy * 2 + 1][
-                    cx * 4 + 2
-                ] not in ("S", "E"):
-                    grid_copy[cy * 2 + 1][cx * 4 + 2] = char
-                cx, cy = nx, ny
-
-        color_code: str = self.COLORS[wall_color]
-        reset: str = self.COLORS["reset"]
-
-        lines_out: list[str] = []
-
-        for row in grid_copy:
-            row_str: str = ""
-            for char in row:
-                if char == "S":
-                    row_str += f"{self.COLORS['start']}S{reset}"
-                elif char == "E":
-                    row_str += f"{self.COLORS['end']}E{reset}"
-                elif char in self.WALL_CHARS:
-                    row_str += f"{color_code}{char}{reset}"
-                elif char == "▓":
-                    row_str += f"{self.COLORS['pattern_42']}▓{reset}"
-                elif char in ("▲", "▼", "▶", "◀"):
-                    p_color = self.COLORS["path"]
-                    row_str += f"\033[1m{p_color}{char}{reset}"
-                else:
-                    row_str += char
-            lines_out.append(row_str)
-
-        return lines_out
+        return [self._render_row(row, wall_color) for row in grid_copy]
 
     def draw_screen(self, lines: list[str], menu_text: str) -> None:
         """Draws the screen cleanly using ANSI codes to prevent artifacts."""
@@ -251,7 +242,7 @@ class MazeVisualizer:
         lines = self.get_rendered_lines(
             ascii_grid, entry, exit_pos, "", False, color_name
         )
-        print("\033[2J\033[H", end="", flush=True)
+        print(self.COLORS["clear_home"], end="", flush=True)
         for line in lines:
             print(line)
             time.sleep(0.04)
@@ -263,7 +254,7 @@ class MazeVisualizer:
         needed_w: int = grid_w
 
         if cols < needed_w or lines < needed_h:
-            print("\033[2J\033[H", end="", flush=True)
+            print(self.COLORS["clear_home"], end="", flush=True)
             print("ERROR: Terminal window is too small for this maze!")
             print(f"Required size : {needed_w}x{needed_h} (Width x Height)")
             print(f"Current size  : {cols}x{lines}\n")
@@ -287,7 +278,6 @@ class MazeVisualizer:
             return
 
         self.set_echo(False)
-        print("\033[?25l", end="", flush=True)
         self.animate_maze(
             ascii_grid, entry, exit_pos, self.COLOR_NAMES[color_idx]
         )
@@ -312,7 +302,6 @@ class MazeVisualizer:
             )
             self.draw_screen(lines, menu_text)
 
-            print("\033[?25h", end="", flush=True)
             self._flush_input()
             self.set_echo(True)
 
@@ -322,12 +311,10 @@ class MazeVisualizer:
                 print("\nExiting gracefully...")
                 break
 
-            print("\033[2J\033[H", end="", flush=True)
+            print(self.COLORS["clear_home"], end="", flush=True)
 
             if choice == "1":
                 self.set_echo(False)
-                print("\033[?25l", end="", flush=True)
-
                 new_gen = MazeGenerator(self.generator.config)
                 new_gen.generate()
                 new_gen.save_to_file()
@@ -348,8 +335,6 @@ class MazeVisualizer:
                 show_path = not show_path
                 if show_path:
                     self.set_echo(False)
-                    print("\033[?25l", end="", flush=True)
-
                     lines = self.get_rendered_lines(
                         ascii_grid,
                         entry,
@@ -360,24 +345,15 @@ class MazeVisualizer:
                     )
                     self.draw_screen(lines, menu_text)
 
-                    cx, cy = entry
-                    for move in full_path:
-                        char, nx, ny = "", cx, cy
-                        if move == "N":
-                            char, nx, ny = "▲", cx, cy - 1
-                        elif move == "S":
-                            char, nx, ny = "▼", cx, cy + 1
-                        elif move == "E":
-                            char, nx, ny = "▶", cx + 1, cy
-                        elif move == "W":
-                            char, nx, ny = "◀", cx - 1, cy
+                    p_color = self.COLORS["path"]
+                    reset = self.COLORS["reset"]
 
-                        if (cx, cy) != entry and (cx, cy) != exit_pos:
-                            term_row = (cy * 2 + 1) + 1
-                            term_col = (cx * 4 + 2) + 1
-                            p_color = self.COLORS["path"]
-                            reset = self.COLORS["reset"]
+                    for tx, ty, char in self._iter_path(entry, full_path):
+                        term_row = ty + 1
+                        term_col = tx + 1
 
+                        current_grid_coords = ((tx - 2) // 4, (ty - 1) // 2)
+                        if current_grid_coords not in (entry, exit_pos):
                             print(
                                 f"\033[{term_row};{term_col}H"
                                 f"\033[1m{p_color}{char}{reset}",
@@ -385,7 +361,6 @@ class MazeVisualizer:
                                 flush=True,
                             )
                             time.sleep(0.09)
-                        cx, cy = nx, ny
 
             elif choice == "3":
                 color_idx = (color_idx + 1) % len(self.COLOR_NAMES)

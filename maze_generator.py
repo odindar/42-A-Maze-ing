@@ -1,14 +1,7 @@
 import random
 from collections import deque
 
-from maze_config import MazeConfig
-
-DIRECTIONS = {
-    "N": (-1, 0, 1, 4),
-    "E": (0, 1, 2, 8),
-    "S": (1, 0, 4, 1),
-    "W": (0, -1, 8, 2),
-}
+from maze_config import DIRECTIONS, MazeConfig
 
 
 class MazeGenerator:
