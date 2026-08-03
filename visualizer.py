@@ -176,7 +176,7 @@ class MazeVisualizer:
         show_path: bool,
         wall_color: str,
     ) -> list[str]:
-        """Applies colors and path arrows, returning grid as a list of strings."""
+        """Applies colors and path arrows, returning grid."""
         grid_copy = [row[:] for row in ascii_grid]
 
         cx_s, cy_s = entry

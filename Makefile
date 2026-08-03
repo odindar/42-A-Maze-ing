@@ -8,7 +8,7 @@ CONFIG = config.txt
 all: run
 
 install:
-	$(PIP) install rich flake8 mypy prompt_toolkit
+	$(PIP) install flake8 mypy
 
 run:
 	$(PYTHON) $(MAIN) $(CONFIG)
