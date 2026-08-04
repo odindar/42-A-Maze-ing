@@ -86,7 +86,7 @@ class MazeGenerator:
         if entry == exit:
             return ""
 
-        queue = deque([(entry[0], entry[1], "")])
+        queue: deque[tuple[int, int, str]] = deque([(entry[0], entry[1], "")])
         self.visited = [
             [False for _ in range(self.config.width)]
             for _ in range(self.config.height)

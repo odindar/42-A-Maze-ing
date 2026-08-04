@@ -66,8 +66,8 @@ class MazeVisualizer:
 
     def set_echo(self, enable: bool) -> None:
         """Manage terminal cursor visibility and echo modes."""
-        fd = sys.stdin.fileno()
-        attr = termios.tcgetattr(fd)
+        fd: int = sys.stdin.fileno()
+        attr: list[Any] = termios.tcgetattr(fd)
         if enable:
             attr[3] = attr[3] | termios.ECHO
             print(self.COLORS["show_cursor"], end="", flush=True)
@@ -154,7 +154,7 @@ class MazeVisualizer:
         """Yields coordinates and arrow chars for the shortest path."""
         cx, cy = entry
         for move in path:
-            char = self.DIR_CHARS.get(move, "")
+            char: str = self.DIR_CHARS.get(move, "")
             yield cx * 4 + 2, cy * 2 + 1, cx, cy, char
             dy, dx, _, _ = DIRECTIONS[move]
             cx += dx
@@ -174,7 +174,7 @@ class MazeVisualizer:
             elif char == "▓":
                 row_str += f"{self.COLORS['pattern_42']}▓{reset}"
             elif char in self.DIR_CHARS.values():
-                p_color = self.COLORS["path"]
+                p_color: str = self.COLORS["path"]
                 row_str += f"\033[1m{p_color}{char}{reset}"
             elif char != " ":
                 row_str += f"{color_code}{char}{reset}"
@@ -196,10 +196,9 @@ class MazeVisualizer:
         color_name: str,
     ) -> None:
         """Animates the maze generation line by line."""
-        lines = [self._render_row(row, color_name) for row in ascii_grid]
         print(self.COLORS["clear_home"], end="", flush=True)
-        for line in lines:
-            print(line)
+        for row in ascii_grid:
+            print(self._render_row(row, color_name))
             time.sleep(0.04)
 
     def check_terminal_size(self, grid_w: int, grid_h: int) -> bool:
@@ -262,7 +261,7 @@ class MazeVisualizer:
                 else:
                     render_grid = ascii_grid
 
-                lines = [
+                lines: list[str] = [
                     self._render_row(row, self.COLOR_NAMES[color_idx])
                     for row in render_grid
                 ]

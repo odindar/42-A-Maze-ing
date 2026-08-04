@@ -31,7 +31,9 @@ def main(argv: list[str] | None = None) -> None:
             print(f"{e}")
             sys.exit(1)
         try:
-            visualizer = MazeVisualizer(config.output_file, generator)
+            visualizer: MazeVisualizer = MazeVisualizer(
+                config.output_file, generator
+            )
             visualizer.run_ui()
         except (ValueError, FileNotFoundError) as e:
             print(f"{e}")

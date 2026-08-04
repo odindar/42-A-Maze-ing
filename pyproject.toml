@@ -1,0 +1,12 @@
+[project]
+name = "a-maze-ing"
+version = "1.0.0"
+description = "Generate random perfect/imperfect mazes from a config file and visualize them in the terminal."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+authors = [
+    { name = "odindar" },
+    { name = "iergin" },
+]
+keywords = ["maze", "generator", "solver", "terminal", "visualizer", "ascii"]
