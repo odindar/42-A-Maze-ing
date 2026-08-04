@@ -21,9 +21,8 @@ class MazeGenerator:
         self._place_42_pattern()
 
     def _place_42_pattern(self) -> None:
-        pattern: tuple[str, ...] = MazeConfig.PATTERN_42
-        pattern_h: int = len(pattern)
-        pattern_w: int = len(pattern[0])
+        pattern_h: int = len(MazeConfig.PATTERN_42)
+        pattern_w: int = len(MazeConfig.PATTERN_42[0])
 
         if (
             self.config.width < pattern_w + 2 or
@@ -36,7 +35,7 @@ class MazeGenerator:
 
         for y in range(pattern_h):
             for x in range(pattern_w):
-                if pattern[y][x] == "1":
+                if MazeConfig.PATTERN_42[y][x] == "1":
                     self.visited[start_y + y][start_x + x] = True
 
     def _get_unvisited_neighbors(

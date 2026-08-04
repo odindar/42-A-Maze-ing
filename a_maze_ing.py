@@ -39,7 +39,6 @@ def main(argv: list[str] | None = None) -> None:
             print(f"{e}")
             sys.exit(1)
     else:
-        print("ERROR: Map is not valid.")
         sys.exit(1)
 
 
