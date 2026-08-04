@@ -139,3 +139,26 @@ All implementation, testing, and debugging were completed by the project members
 - Configuration parser
 - Testing
 - Bug fixing
+
+### Planning
+
+We first implemented the configuration parser, then the maze generation algorithm, and finally the graphical visualizer. After all components were working together, we tested the project and fixed bugs.
+
+### What worked well
+
+- Clear division of tasks.
+- Easy integration of all project modules.
+
+### What could be improved
+
+- Better code documentation.
+- More test cases.
+- Additional maze generation algorithms.
+
+### Tools Used
+
+- Python 3
+- Git
+- GitHub
+- Visual Studio Code
+- AI

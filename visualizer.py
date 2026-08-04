@@ -109,66 +109,41 @@ class MazeVisualizer:
         return hex_grid, (entry_x, entry_y), (exit_x, exit_y), path
 
     def build_ascii_grid(self, hex_grid: list[str]) -> list[list[str]]:
-        """Converts the hexadecimal grid into an ASCII box-drawing matrix."""
+        """Converts the hexadecimal grid directly into an ASCII box-drawing matrix."""
         height: int = len(hex_grid)
         width: int = len(hex_grid[0]) if height > 0 else 0
 
         grid_h: int = height * 2 + 1
         grid_w: int = width * 4 + 1
 
-        ascii_grid: list[list[str]] = [
-            [" " for _ in range(grid_w)] for _ in range(grid_h)
-        ]
-
-        for y in range(height + 1):
-            for x in range(width + 1):
-                ascii_grid[y * 2][x * 4] = "+"
-
-        for y in range(height):
-            for x in range(width):
-                val: int = int(hex_grid[y][x], 16)
-
-                if val & 1:
-                    for i in range(1, 4):
-                        ascii_grid[y * 2][x * 4 + i] = "-"
-                if val & 2:
-                    ascii_grid[y * 2 + 1][x * 4 + 4] = "|"
-                if val & 4:
-                    for i in range(1, 4):
-                        ascii_grid[y * 2 + 2][x * 4 + i] = "-"
-                if val & 8:
-                    ascii_grid[y * 2 + 1][x * 4] = "|"
-                if val == 15:
-                    for i in range(1, 4):
-                        ascii_grid[y * 2 + 1][x * 4 + i] = "#"
-
         final_grid: list[list[str]] = [
             [" " for _ in range(grid_w)] for _ in range(grid_h)
         ]
-        for y in range(grid_h):
-            for x in range(grid_w):
-                char: str = ascii_grid[y][x]
-                if char == "-":
-                    final_grid[y][x] = "━"
-                elif char == "|":
-                    final_grid[y][x] = "┃"
-                elif char == "#":
-                    final_grid[y][x] = "▓"
-                elif char == "+":
-                    up: bool = y > 0 and ascii_grid[y - 1][x] == "|"
-                    down: bool = y < grid_h - 1 and ascii_grid[y + 1][x] == "|"
-                    left: bool = x > 0 and ascii_grid[y][x - 1] == "-"
-                    right: bool = (
-                        x < grid_w - 1 and ascii_grid[y][x + 1] == "-"
-                    )
-
-                    state: tuple[bool, bool, bool, bool] = (
-                        up, down, left, right
-                    )
-                    final_grid[y][x] = self.BOX_CHARS.get(state, " ")
-                else:
-                    final_grid[y][x] = " "
-
+        for y in range(height):
+            for x in range(width):
+                val: int = int(hex_grid[y][x], 16)
+                if val & 1:
+                    for i in range(1, 4):
+                        final_grid[y * 2][x * 4 + i] = "━"
+                if val & 2:
+                    final_grid[y * 2 + 1][x * 4 + 4] = "┃"
+                if val & 4:
+                    for i in range(1, 4):
+                        final_grid[y * 2 + 2][x * 4 + i] = "━"
+                if val & 8:
+                    final_grid[y * 2 + 1][x * 4] = "┃"
+                if val == 15:
+                    for i in range(1, 4):
+                        final_grid[y * 2 + 1][x * 4 + i] = "▓"
+        for y in range(height + 1):
+            for x in range(width + 1):
+                gy, gx = y * 2, x * 4
+                up: bool = gy > 0 and final_grid[gy - 1][gx] == "┃"
+                down: bool = gy < grid_h - 1 and final_grid[gy + 1][gx] == "┃"
+                left: bool = gx > 0 and final_grid[gy][gx - 1] == "━"
+                right: bool = gx < grid_w - 1 and final_grid[gy][gx + 1] == "━"
+                state: tuple[bool, bool, bool, bool] = (up, down, left, right)
+                final_grid[gy][gx] = self.BOX_CHARS.get(state, " ")
         return final_grid
 
     def _iter_path(
