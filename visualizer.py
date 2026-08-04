@@ -265,8 +265,6 @@ class MazeVisualizer:
                     print("\nExiting gracefully...")
                     break
 
-                print(self.COLORS["clear_home"], end="", flush=True)
-
                 if choice == "1":
                     self.set_echo(False)
                     new_gen: MazeGenerator = MazeGenerator(
@@ -291,17 +289,25 @@ class MazeVisualizer:
                     if not show_path:
                         show_path = True
                         self.set_echo(False)
-                        for tx, ty, _, _, char in self._iter_path(entry, path):
+                        p_color: str = self.COLORS["path"]
+                        reset: str = self.COLORS["reset"]
+
+                        for tx, ty, _, _, chr in self._iter_path(entry, path):
                             if ascii_grid[ty][tx] not in ("S", "E"):
-                                ascii_grid[ty][tx] = char
-                                lines = [
-                                    self._render_row(
-                                        row, self.COLOR_NAMES[color_idx]
-                                    )
-                                    for row in ascii_grid
-                                ]
-                                self.draw_screen(lines, menu_text)
-                                time.sleep(0.04)
+                                ascii_grid[ty][tx] = chr
+                                print(
+                                    f"\033[{ty + 1};{tx + 1}H"
+                                    f"\033[1m{p_color}{chr}{reset}",
+                                    end="",
+                                    flush=True,
+                                )
+                                time.sleep(0.05)
+
+                        lines = [
+                            self._render_row(row, self.COLOR_NAMES[color_idx])
+                            for row in ascii_grid
+                        ]
+                        self.draw_screen(lines, menu_text)
                     else:
                         show_path = False
                         for tx, ty, _, _, _ in self._iter_path(entry, path):
