@@ -163,7 +163,6 @@ class MazeVisualizer:
     def _render_row(self, row: list[str], wall_color: str) -> str:
         """Applies ANSI colors to a single grid row."""
         row_str: str = ""
-        color_code: str = self.COLORS[wall_color]
         reset: str = self.COLORS["reset"]
 
         for char in row:
@@ -177,7 +176,7 @@ class MazeVisualizer:
                 p_color: str = self.COLORS["path"]
                 row_str += f"\033[1m{p_color}{char}{reset}"
             elif char != " ":
-                row_str += f"{color_code}{char}{reset}"
+                row_str += f"{self.COLORS[wall_color]}{char}{reset}"
             else:
                 row_str += char
         return row_str
@@ -230,7 +229,7 @@ class MazeVisualizer:
         )
 
         grid_h: int = len(ascii_grid)
-        grid_w: int = len(ascii_grid[0]) if grid_h > 0 else 0
+        grid_w: int = len(ascii_grid[0])
 
         if not self.check_terminal_size(grid_w, grid_h):
             return
