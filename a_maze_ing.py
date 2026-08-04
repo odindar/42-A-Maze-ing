@@ -7,13 +7,16 @@ from maze_generator import MazeGenerator
 from parser import MazeParser
 from visualizer import MazeVisualizer
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
+
+def main(argv: list[str] | None = None) -> None:
+    argv = sys.argv[1:] if argv is None else argv
+
+    if len(argv) != 1:
         print("Error: Usage: python3 a_maze_ing.py <config_file>")
         sys.exit(1)
 
     try:
-        parser: MazeParser = MazeParser(sys.argv[1])
+        parser: MazeParser = MazeParser(argv[0])
         config: MazeConfig = parser.parse_config()
     except (ValueError, FileNotFoundError) as e:
         print(f"{e}")
@@ -36,3 +39,7 @@ if __name__ == "__main__":
     else:
         print("ERROR: Map is not valid.")
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

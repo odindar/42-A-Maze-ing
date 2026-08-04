@@ -69,10 +69,10 @@ class MazeVisualizer:
         fd = sys.stdin.fileno()
         attr = termios.tcgetattr(fd)
         if enable:
-            attr[3] |= termios.ECHO
+            attr[3] = attr[3] | termios.ECHO
             print(self.COLORS["show_cursor"], end="", flush=True)
         else:
-            attr[3] &= ~termios.ECHO
+            attr[3] = attr[3] & ~termios.ECHO
             print(self.COLORS["hide_cursor"], end="", flush=True)
         termios.tcsetattr(fd, termios.TCSANOW, attr)
 
@@ -85,31 +85,24 @@ class MazeVisualizer:
     ) -> tuple[list[str], tuple[int, int], tuple[int, int], str]:
         """Reads the hex maze file, returns ASCII grid and footer data."""
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, "r") as f:
                 content: str = f.read().strip()
         except FileNotFoundError:
             print(f"Error: Maze output file '{filepath}' not found.")
             sys.exit(1)
 
-        parts: list[str] = content.replace("\r", "").split("\n\n")
-        if len(parts) < 2:
-            print(f"Error: Invalid maze file format in '{filepath}'.")
-            sys.exit(1)
+        parts: list[str] = content.split("\n\n")
         hex_grid: list[str] = parts[0].splitlines()
         footer_lines: list[str] = parts[1].splitlines()
 
-        try:
-            entry_x, entry_y = map(int, footer_lines[0].split(","))
-            exit_x, exit_y = map(int, footer_lines[1].split(","))
-            path: str = footer_lines[2] if len(footer_lines) > 2 else ""
-        except (IndexError, ValueError) as e:
-            print(f"Error parsing maze footer data: {e}")
-            sys.exit(1)
+        entry_x, entry_y = map(int, footer_lines[0].strip().split(","))
+        exit_x, exit_y = map(int, footer_lines[1].strip().split(","))
+        path: str = footer_lines[2] if len(footer_lines) > 2 else ""
 
         return hex_grid, (entry_x, entry_y), (exit_x, exit_y), path
 
     def build_ascii_grid(self, hex_grid: list[str]) -> list[list[str]]:
-        """Converts the hexadecimal grid directly into an ASCII box-drawing matrix."""
+        """Converts the hexadecimal grid directly into an ASCII."""
         height: int = len(hex_grid)
         width: int = len(hex_grid[0]) if height > 0 else 0
 
@@ -195,14 +188,12 @@ class MazeVisualizer:
         cx_s, cy_s = entry
         cx_e, cy_e = exit_pos
 
-        if cy_s * 2 + 1 < len(grid_copy):
-            grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
-        if cy_e * 2 + 1 < len(grid_copy):
-            grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
+        grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
+        grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
 
         if show_path:
             for tx, ty, _, _, char in self._iter_path(entry, path):
-                if ty < len(grid_copy) and grid_copy[ty][tx] not in ("S", "E"):
+                if grid_copy[ty][tx] not in ("S", "E"):
                     grid_copy[ty][tx] = char
 
         return [self._render_row(row, wall_color) for row in grid_copy]
@@ -339,10 +330,10 @@ class MazeVisualizer:
                         iter_pth: Iterator[tuple[int, int, int, int, str]] = (
                             self._iter_path(entry, path)
                         )
-                        for tx, ty, gx, gy, char in iter_pth:
+                        for cx, cy, gx, gy, char in iter_pth:
                             if (gx, gy) not in (entry, exit_pos):
                                 print(
-                                    f"\033[{ty + 1};{tx + 1}H"
+                                    f"\033[{cy + 1};{cx + 1}H"
                                     f"\033[1m{p_color}{char}{reset}",
                                     end="",
                                     flush=True,
