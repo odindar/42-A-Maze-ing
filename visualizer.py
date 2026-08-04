@@ -173,31 +173,6 @@ class MazeVisualizer:
                 row_str += char
         return row_str
 
-    def get_rendered_lines(
-        self,
-        ascii_grid: list[list[str]],
-        entry: tuple[int, int],
-        exit_pos: tuple[int, int],
-        path: str,
-        show_path: bool,
-        wall_color: str,
-    ) -> list[str]:
-        """Returns colored grid lines with the path applied if requested."""
-        grid_copy: list[list[str]] = [row[:] for row in ascii_grid]
-
-        cx_s, cy_s = entry
-        cx_e, cy_e = exit_pos
-
-        grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
-        grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
-
-        if show_path:
-            for tx, ty, _, _, char in self._iter_path(entry, path):
-                if grid_copy[ty][tx] not in ("S", "E"):
-                    grid_copy[ty][tx] = char
-
-        return [self._render_row(row, wall_color) for row in grid_copy]
-
     def draw_screen(self, lines: list[str], menu_text: str) -> None:
         """Draws the screen cleanly using ANSI codes to prevent artifacts."""
         print(
@@ -209,14 +184,10 @@ class MazeVisualizer:
     def animate_maze(
         self,
         ascii_grid: list[list[str]],
-        entry: tuple[int, int],
-        exit_pos: tuple[int, int],
         color_name: str,
     ) -> None:
-        """Animates the maze generation line by line without flickering."""
-        lines = self.get_rendered_lines(
-            ascii_grid, entry, exit_pos, "", False, color_name
-        )
+        """Animates the maze generation line by line."""
+        lines = [self._render_row(row, color_name) for row in ascii_grid]
         print(self.COLORS["clear_home"], end="", flush=True)
         for line in lines:
             print(line)
@@ -257,7 +228,7 @@ class MazeVisualizer:
         try:
             self.set_echo(False)
             self.animate_maze(
-                ascii_grid, entry, exit_pos, self.COLOR_NAMES[color_idx]
+                ascii_grid, self.COLOR_NAMES[color_idx]
             )
 
             menu_text: str = (
@@ -270,14 +241,21 @@ class MazeVisualizer:
             )
 
             while True:
-                lines = self.get_rendered_lines(
-                    ascii_grid,
-                    entry,
-                    exit_pos,
-                    path if show_path else "",
-                    show_path,
-                    self.COLOR_NAMES[color_idx],
-                )
+                grid_copy: list[list[str]] = [row[:] for row in ascii_grid]
+                cx_s, cy_s = entry
+                cx_e, cy_e = exit_pos
+                grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
+                grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
+
+                if show_path:
+                    for tx, ty, _, _, char in self._iter_path(entry, path):
+                        if grid_copy[ty][tx] not in ("S", "E"):
+                            grid_copy[ty][tx] = char
+
+                lines = [
+                    self._render_row(row, self.COLOR_NAMES[color_idx])
+                    for row in grid_copy
+                ]
                 self.draw_screen(lines, menu_text)
 
                 self._flush_input()
@@ -314,14 +292,13 @@ class MazeVisualizer:
                     show_path = not show_path
                     if show_path:
                         self.set_echo(False)
-                        lines = self.get_rendered_lines(
-                            ascii_grid,
-                            entry,
-                            exit_pos,
-                            "",
-                            False,
-                            self.COLOR_NAMES[color_idx],
-                        )
+                        grid_copy = [row[:] for row in ascii_grid]
+                        grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
+                        grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
+                        lines = [
+                            self._render_row(row, self.COLOR_NAMES[color_idx])
+                            for row in grid_copy
+                        ]
                         self.draw_screen(lines, menu_text)
 
                         p_color: str = self.COLORS["path"]
