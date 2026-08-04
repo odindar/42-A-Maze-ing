@@ -101,7 +101,12 @@ class MazeVisualizer:
 
         return hex_grid, (entry_x, entry_y), (exit_x, exit_y), path
 
-    def build_ascii_grid(self, hex_grid: list[str]) -> list[list[str]]:
+    def build_ascii_grid(
+        self,
+        hex_grid: list[str],
+        entry: tuple[int, int],
+        exit_pos: tuple[int, int],
+    ) -> list[list[str]]:
         """Converts the hexadecimal grid directly into an ASCII."""
         height: int = len(hex_grid)
         width: int = len(hex_grid[0]) if height > 0 else 0
@@ -137,6 +142,10 @@ class MazeVisualizer:
                 right: bool = gx < grid_w - 1 and final_grid[gy][gx + 1] == "━"
                 state: tuple[bool, bool, bool, bool] = (up, down, left, right)
                 final_grid[gy][gx] = self.BOX_CHARS.get(state, " ")
+        cx_s, cy_s = entry
+        cx_e, cy_e = exit_pos
+        final_grid[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
+        final_grid[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
         return final_grid
 
     def _iter_path(
@@ -217,7 +226,9 @@ class MazeVisualizer:
         ) = self.parse_maze_file(self.output_file)
         hex_grid, entry, exit_pos, path = parsed_data
 
-        ascii_grid: list[list[str]] = self.build_ascii_grid(hex_grid)
+        ascii_grid: list[list[str]] = self.build_ascii_grid(
+            hex_grid, entry, exit_pos
+        )
 
         grid_h: int = len(ascii_grid)
         grid_w: int = len(ascii_grid[0]) if grid_h > 0 else 0
@@ -241,20 +252,19 @@ class MazeVisualizer:
             )
 
             while True:
-                grid_copy: list[list[str]] = [row[:] for row in ascii_grid]
-                cx_s, cy_s = entry
-                cx_e, cy_e = exit_pos
-                grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
-                grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
-
                 if show_path:
+                    render_grid: list[list[str]] = [
+                        row[:] for row in ascii_grid
+                    ]
                     for tx, ty, _, _, char in self._iter_path(entry, path):
-                        if grid_copy[ty][tx] not in ("S", "E"):
-                            grid_copy[ty][tx] = char
+                        if render_grid[ty][tx] not in ("S", "E"):
+                            render_grid[ty][tx] = char
+                else:
+                    render_grid = ascii_grid
 
                 lines = [
                     self._render_row(row, self.COLOR_NAMES[color_idx])
-                    for row in grid_copy
+                    for row in render_grid
                 ]
                 self.draw_screen(lines, menu_text)
 
@@ -280,24 +290,22 @@ class MazeVisualizer:
                     parsed_data = self.parse_maze_file(self.output_file)
                     hex_grid, entry, exit_pos, path = parsed_data
 
-                    ascii_grid = self.build_ascii_grid(hex_grid)
+                    ascii_grid = self.build_ascii_grid(
+                        hex_grid, entry, exit_pos
+                    )
                     show_path = False
 
                     self.animate_maze(
-                        ascii_grid, entry, exit_pos,
-                        self.COLOR_NAMES[color_idx]
+                        ascii_grid, self.COLOR_NAMES[color_idx]
                     )
 
                 elif choice == "2":
                     show_path = not show_path
                     if show_path:
                         self.set_echo(False)
-                        grid_copy = [row[:] for row in ascii_grid]
-                        grid_copy[cy_s * 2 + 1][cx_s * 4 + 2] = "S"
-                        grid_copy[cy_e * 2 + 1][cx_e * 4 + 2] = "E"
                         lines = [
                             self._render_row(row, self.COLOR_NAMES[color_idx])
-                            for row in grid_copy
+                            for row in ascii_grid
                         ]
                         self.draw_screen(lines, menu_text)
 
