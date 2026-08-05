@@ -8,7 +8,7 @@ from parser import MazeParser
 from visualizer import MazeVisualizer
 
 
-def main(argv: list[str] | None = None) -> None:
+def main() -> None:
     if len(sys.argv) != 2:
         print("Error: Usage: python3 a_maze_ing.py <config_file>")
         sys.exit(1)
