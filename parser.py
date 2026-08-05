@@ -157,6 +157,6 @@ class MazeParser:
         ]
         output_lower: str = maze.output_file.lower()
         if output_lower in forbidden_files:
-            print(f"ERROR: Cannot overwrite source or config file: {maze.output_file}")
+            print("ERROR: Cannot overwrite source or config file")
             return False
         return True

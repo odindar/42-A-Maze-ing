@@ -23,7 +23,7 @@ class MazeVisualizer:
         "navy": "\033[38;2;96;165;250m",
         "khaki": "\033[38;2;253;224;71m",
         "anthracite": "\033[38;2;203;213;225m",
-        "path": "\033[38;2;255;50;50m",
+        "path": "\033[38;2;255;50;50;1m",
         "start": "\033[38;2;34;197;94;1m",
         "end": "\033[38;2;239;68;68;1m",
         "pattern_42": "\033[38;2;250;200;250m",
@@ -149,12 +149,12 @@ class MazeVisualizer:
 
     def _iter_path(
         self, entry: tuple[int, int], path: str
-    ) -> Iterator[tuple[int, int, int, int, str]]:
+    ) -> Iterator[tuple[int, int, str]]:
         """Yields coordinates and arrow chars for the shortest path."""
         cx, cy = entry
         for move in path:
             char: str = self.DIR_CHARS.get(move, "")
-            yield cx * 4 + 2, cy * 2 + 1, cx, cy, char
+            yield cx * 4 + 2, cy * 2 + 1, char
             dy, dx, _, _ = DIRECTIONS[move]
             cx += dx
             cy += dy
@@ -271,27 +271,21 @@ class MazeVisualizer:
                         p_color: str = self.COLORS["path"]
                         reset: str = self.COLORS["reset"]
 
-                        for tx, ty, _, _, chr in self._iter_path(entry, path):
-                            if ascii_grid[ty][tx] not in ("S", "E"):
-                                ascii_grid[ty][tx] = chr
+                        for cx, cy, chr in self._iter_path(entry, path):
+                            if ascii_grid[cy][cx] not in ("S", "E"):
+                                ascii_grid[cy][cx] = chr
                                 print(
-                                    f"\033[{ty + 1};{tx + 1}H"
-                                    f"\033[1m{p_color}{chr}{reset}",
+                                    f"\033[{cy + 1};{cx + 1}H"
+                                    f"{p_color}{chr}{reset}",
                                     end="",
                                     flush=True,
                                 )
                                 time.sleep(0.05)
-
-                        lines = [
-                            self._render_row(row, self.COLOR_NAMES[color_idx])
-                            for row in ascii_grid
-                        ]
-                        self.draw_screen(lines, menu_text)
                     else:
                         show_path = False
-                        for tx, ty, _, _, _ in self._iter_path(entry, path):
-                            if ascii_grid[ty][tx] not in ("S", "E"):
-                                ascii_grid[ty][tx] = " "
+                        for cx, cy, _ in self._iter_path(entry, path):
+                            if ascii_grid[cy][cx] not in ("S", "E"):
+                                ascii_grid[cy][cx] = " "
 
                 elif choice == "3":
                     color_idx = (color_idx + 1) % len(self.COLOR_NAMES)
