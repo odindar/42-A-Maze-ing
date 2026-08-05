@@ -2,6 +2,8 @@
 
 # A-Maze-ing
 
+![A-Maze-Ing](maze.png)
+
 ## Description
 
 A-Maze-ing is a Python project that generates random mazes from a configuration file. The program supports both perfect and imperfect mazes, saves the generated maze to an output file, computes the solution path, and displays the maze using a graphical visualizer.
