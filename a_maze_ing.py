@@ -9,14 +9,12 @@ from visualizer import MazeVisualizer
 
 
 def main(argv: list[str] | None = None) -> None:
-    argv = sys.argv[1:] if argv is None else argv
-
-    if len(argv) != 1:
+    if len(sys.argv) != 2:
         print("Error: Usage: python3 a_maze_ing.py <config_file>")
         sys.exit(1)
 
     try:
-        parser: MazeParser = MazeParser(argv[0])
+        parser: MazeParser = MazeParser(sys.argv[1])
         config: MazeConfig = parser.parse_config()
     except (ValueError, FileNotFoundError) as e:
         print(f"{e}")

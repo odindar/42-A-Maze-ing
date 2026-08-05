@@ -1,3 +1,5 @@
+import shutil
+
 from maze_config import MazeConfig
 
 
@@ -134,4 +136,27 @@ class MazeParser:
                     print("ERROR: ENTRY/EXIT coordinate on 42 pattern wall.")
                     return False
 
+        needed_w: int = maze.width * 4 + 1
+        needed_h: int = maze.height * 2 + 1 + 8
+        cols, lines = shutil.get_terminal_size()
+        if cols < needed_w or lines < needed_h:
+            max_width: int = (cols - 1) // 4
+            max_height: int = (lines - 9) // 2
+            print(f"Required size : {maze.width} cols x {maze.height} lines")
+            print(f"Current size  : {max_width} cols x {max_height} lines\n")
+            return False
+
+        forbidden_files: list[str] = [
+            "makefile",
+            "config.txt",
+            "a_maze_ing.py",
+            "parser.py",
+            "visualizer.py",
+            "maze_generator.py",
+            "maze_config.py",
+        ]
+        output_lower: str = maze.output_file.lower()
+        if output_lower in forbidden_files:
+            print(f"ERROR: Cannot overwrite source or config file: {maze.output_file}")
+            return False
         return True

@@ -3,7 +3,6 @@ A-Maze-ing ASCII Visualizer Module.
 Handles parsing of the hex maze file, terminal rendering, and animations.
 """
 
-import shutil
 import sys
 import termios
 import time
@@ -109,7 +108,7 @@ class MazeVisualizer:
     ) -> list[list[str]]:
         """Converts the hexadecimal grid directly into an ASCII."""
         height: int = len(hex_grid)
-        width: int = len(hex_grid[0]) if height > 0 else 0
+        width: int = len(hex_grid[0])
 
         grid_h: int = height * 2 + 1
         grid_w: int = width * 4 + 1
@@ -200,20 +199,6 @@ class MazeVisualizer:
             print(self._render_row(row, color_name))
             time.sleep(0.04)
 
-    def check_terminal_size(self, grid_w: int, grid_h: int) -> bool:
-        """Checks if the current terminal window is large enough."""
-        cols, lines = shutil.get_terminal_size()
-        needed_h: int = grid_h + 8
-        needed_w: int = grid_w
-
-        if cols < needed_w or lines < needed_h:
-            print(self.COLORS["clear_home"], end="", flush=True)
-            print("ERROR: Terminal window is too small for this maze!")
-            print(f"Required size : {needed_w}x{needed_h} (Width x Height)")
-            print(f"Current size  : {cols}x{lines}\n")
-            return False
-        return True
-
     def run_ui(self) -> None:
         """Main interactive loop with animations."""
         show_path: bool = False
@@ -227,12 +212,6 @@ class MazeVisualizer:
         ascii_grid: list[list[str]] = self.build_ascii_grid(
             hex_grid, entry, exit_pos
         )
-
-        grid_h: int = len(ascii_grid)
-        grid_w: int = len(ascii_grid[0])
-
-        if not self.check_terminal_size(grid_w, grid_h):
-            return
 
         try:
             self.set_echo(False)
