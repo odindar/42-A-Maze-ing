@@ -2,7 +2,13 @@
 
 # A-Maze-ing
 
-![A-Maze-Ing](maze.png)
+![A-Maze-Ing](excalidraw/excalidraw.png)
+
+## Screenshots
+	
+| Maze | Maze with shortest path |
+| :---: | :---: |
+| ![maze](screenshots/maze.png) | ![maze with path](screenshots/maze_showpath.png)
 
 ## Description
 
